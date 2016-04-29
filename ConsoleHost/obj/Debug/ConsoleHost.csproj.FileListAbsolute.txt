@@ -1,0 +1,6 @@
+E:\PlantManager-master\Pc Gateway\Gateway\ConsoleApplication1\bin\Debug\ConsoleApplication1.exe.config
+E:\PlantManager-master\Pc Gateway\Gateway\ConsoleApplication1\obj\Debug\ConsoleHost.csprojResolveAssemblyReference.cache
+E:\PlantManager-master\Pc Gateway\Gateway\ConsoleApplication1\bin\Debug\ConsoleApplication1.exe
+E:\PlantManager-master\Pc Gateway\Gateway\ConsoleApplication1\bin\Debug\ConsoleApplication1.pdb
+E:\PlantManager-master\Pc Gateway\Gateway\ConsoleApplication1\obj\Debug\ConsoleApplication1.exe
+E:\PlantManager-master\Pc Gateway\Gateway\ConsoleApplication1\obj\Debug\ConsoleApplication1.pdb

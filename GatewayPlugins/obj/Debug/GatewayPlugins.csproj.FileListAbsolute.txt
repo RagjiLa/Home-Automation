@@ -1,0 +1,5 @@
+E:\PlantManager-master\Pc Gateway\Gateway\GatewayPlugins\bin\Debug\GatewayPlugins.dll
+E:\PlantManager-master\Pc Gateway\Gateway\GatewayPlugins\bin\Debug\GatewayPlugins.pdb
+E:\PlantManager-master\Pc Gateway\Gateway\GatewayPlugins\obj\Debug\GatewayPlugins.csprojResolveAssemblyReference.cache
+E:\PlantManager-master\Pc Gateway\Gateway\GatewayPlugins\obj\Debug\GatewayPlugins.dll
+E:\PlantManager-master\Pc Gateway\Gateway\GatewayPlugins\obj\Debug\GatewayPlugins.pdb

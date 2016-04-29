@@ -1,0 +1,9 @@
+E:\PlantManager-master\Pc Gateway\Gateway\GatewayKernelTests\obj\Debug\GatewayKernelTests.csprojResolveAssemblyReference.cache
+E:\PlantManager-master\Pc Gateway\Gateway\GatewayKernelTests\bin\Debug\GatewayKernelTests.dll
+E:\PlantManager-master\Pc Gateway\Gateway\GatewayKernelTests\bin\Debug\GatewayKernelTests.pdb
+E:\PlantManager-master\Pc Gateway\Gateway\GatewayKernelTests\bin\Debug\GatewayKernel.dll
+E:\PlantManager-master\Pc Gateway\Gateway\GatewayKernelTests\bin\Debug\GatewayKernel.pdb
+E:\PlantManager-master\Pc Gateway\Gateway\GatewayKernelTests\obj\Debug\GatewayKernelTests.dll
+E:\PlantManager-master\Pc Gateway\Gateway\GatewayKernelTests\obj\Debug\GatewayKernelTests.pdb
+E:\PlantManager-master\Pc Gateway\Gateway\GatewayKernelTests\bin\Debug\Moq.dll
+E:\PlantManager-master\Pc Gateway\Gateway\GatewayKernelTests\bin\Debug\Moq.xml
