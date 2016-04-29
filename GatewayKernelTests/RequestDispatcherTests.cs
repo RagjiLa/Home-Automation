@@ -22,13 +22,13 @@ namespace GatewayKernelTests
             var creator = new Mock<IObjectCreator>();
             var task = new Mock<ITask>();
             var endpoint = new IPEndPoint(IPAddress.Any, 9000);
-            var emptyPlugins = new List<IDispatcherPlugin>();
+            var emptyPlugins = new List<ISingleSessionPlugin>();
 
             creator.Setup(c => c.GetTask()).Returns(task.Object);
             using (var target = new RequestDispatcher(creator.Object))
             {
-                target.StartDispatching(endpoint, new List<IDispatcherPlugin>());
-                target.StartDispatching(endpoint, new List<IDispatcherPlugin>());
+                target.StartDispatching(endpoint, new List<ISingleSessionPlugin>());
+                target.StartDispatching(endpoint, new List<ISingleSessionPlugin>());
             }
         }
 
@@ -40,9 +40,9 @@ namespace GatewayKernelTests
             var task = new Mock<ITask>();
             var tcplistner = new Mock<ITcpListner>();
             var clientSocket = new Mock<ISocket>();
-            var mockPlugin = new Mock<IDispatcherPlugin>();
+            var mockPlugin = new Mock<ISingleSessionPlugin>();
             var endpoint = new IPEndPoint(IPAddress.Any, 9000);
-            List<IDispatcherPlugin> plugins = new List<IDispatcherPlugin>();
+            List<ISingleSessionPlugin> plugins = new List<ISingleSessionPlugin>();
             List<byte> mockPacket = new List<byte>();
 
             using (var target = new RequestDispatcher(creator.Object))
@@ -88,9 +88,9 @@ namespace GatewayKernelTests
             var task = new Mock<ITask>();
             var tcplistner = new Mock<ITcpListner>();
             var clientSocket = new Mock<ISocket>();
-            var mockPlugin = new Mock<IDispatcherPlugin>();
+            var mockPlugin = new Mock<ISingleSessionPlugin>();
             var endpoint = new IPEndPoint(IPAddress.Any, 9000);
-            var plugins = new List<IDispatcherPlugin>();
+            var plugins = new List<ISingleSessionPlugin>();
             var mockPacket = new MemoryStream(1024);
             var packetWritter = new BinaryWriter(mockPacket);
             var responsePacket = new byte[] { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
@@ -147,9 +147,9 @@ namespace GatewayKernelTests
             var task = new Mock<ITask>();
             var tcplistner = new Mock<ITcpListner>();
             var clientSocket = new Mock<ISocket>();
-            var mockPlugin = new Mock<IDispatcherPlugin>();
+            var mockPlugin = new Mock<ISingleSessionPlugin>();
             var endpoint = new IPEndPoint(IPAddress.Any, 9000);
-            var plugins = new List<IDispatcherPlugin>();
+            var plugins = new List<ISingleSessionPlugin>();
             var mockPacket = new MemoryStream(1024);
             var packetWritter = new BinaryWriter(mockPacket);
             var responsePacket = new byte[] { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };

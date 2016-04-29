@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>GatewayKernel</RootNamespace>
     <AssemblyName>GatewayKernel</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -40,7 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IDispatcherPlugin.cs" />
+    <Compile Include="IMultiSessionPlugin.cs" />
+    <Compile Include="SessionExecutor.cs" />
+    <Compile Include="ISingleSessionPlugin.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="RequestDispatcher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

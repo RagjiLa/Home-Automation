@@ -11,9 +11,9 @@ namespace GatewayKernel
 {
     public class RequestDispatcher : IDisposable
     {
-        private Dictionary<string, IDispatcherPlugin> _responders = new Dictionary<string, IDispatcherPlugin>();
+        private Dictionary<string, SessionExecutor> _responders = new Dictionary<string, SessionExecutor>();
         private CancellationTokenSource _tokenSource = new CancellationTokenSource();
-        private ManualResetEvent _active = new ManualResetEvent(true);
+        private ManualResetEvent _IsDispatchingActive = new ManualResetEvent(true);
         private readonly IObjectCreator _creator;
         private const byte Sop = 0xFF;
 
@@ -22,12 +22,13 @@ namespace GatewayKernel
             _creator = creator;
         }
 
-        public void StartDispatching(IPEndPoint listeningEndpoint, IEnumerable<IDispatcherPlugin> plugins)
+        public void StartDispatching(IPEndPoint listeningEndpoint, IEnumerable<ISingleSessionPlugin> plugins)
         {
-            if (_active.WaitOne(1))
+            if (_IsDispatchingActive.WaitOne(1))
             {
-                _active.Reset();
-                _responders = plugins.ToDictionary(k => k.Name.ToLower());
+                _IsDispatchingActive.Reset();
+                var threadSafePlugins = plugins.Select(p => new SessionExecutor(p));
+                _responders = threadSafePlugins.ToDictionary(k => k.Name.ToLower());
                 _creator.GetTask().Run(() => ConnectionLoop(listeningEndpoint), "Connection Loop");
             }
             else
@@ -59,6 +60,8 @@ namespace GatewayKernel
                 _tokenSource.Dispose();
                 _tokenSource = null;
                 coreSocket.Stop();
+                foreach (var handler in _responders) handler.Value.Dispose();
+                _responders.Clear();
             }
         }
 
@@ -66,7 +69,7 @@ namespace GatewayKernel
         {
             try
             {
-                IDispatcherPlugin activeHandler = null;
+                SessionExecutor activeHandler = null;
                 List<byte> responseData = null;
                 List<byte> requestData = null;
                 using (connection)
@@ -92,11 +95,21 @@ namespace GatewayKernel
                                     if (_responders.ContainsKey(packetheader))
                                     {
                                         activeHandler = _responders[packetheader];
-                                        responseData = new List<byte>(activeHandler.Respond(requestData));
-                                        if (connection.Send(responseData.ToArray()) != responseData.Count())
+                                        activeHandler = activeHandler.CanHaveMultipleSessions ? activeHandler.CreateNewSession() : activeHandler;
+                                        var response = activeHandler.Respond(requestData);
+                                        if (response != null)
+                                        {
+                                            responseData = new List<byte>(response);
+                                            if (connection.Send(responseData.ToArray()) != responseData.Count())
+                                            {
+                                                activeHandler = null;
+                                                Logger.Error(connection.RemoteEndPoint + " Sending data failed");
+                                            }
+                                        }
+                                        else
                                         {
                                             activeHandler = null;
-                                            Logger.Error(connection.RemoteEndPoint + " Sending data failed");
+                                            Logger.Error(connection.RemoteEndPoint + " No response was generated from handler or is disposed");
                                         }
                                     }
                                     else
@@ -144,18 +157,17 @@ namespace GatewayKernel
 
         public void Dispose()
         {
-            if (_active != null)
+            if (_IsDispatchingActive != null)
             {
-                _active.Set();
-                _active.Close();
-                _active.Dispose();
-                _active = null;
+                _IsDispatchingActive.Set();
+                _IsDispatchingActive.Close();
+                _IsDispatchingActive.Dispose();
+                _IsDispatchingActive = null;
             }
             if (_tokenSource != null)
             {
                 _tokenSource.Cancel();
             }
-            _responders.Clear();
         }
     }
 }
