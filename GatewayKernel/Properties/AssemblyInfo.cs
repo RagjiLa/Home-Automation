@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("GatewayKernel")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Hub")]
+[assembly: AssemblyDescription("A IOT communication Hub for home automation")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("GatewayKernel")]
+[assembly: AssemblyCompany("Laukik's Open Source company")]
+[assembly: AssemblyProduct("Home Automation")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

@@ -1,5 +1,5 @@
-﻿using GatewayKernel;
-using GatewayKernel.TestingInterfaces;
+﻿using Hub;
+using Hub.TestingInterfaces;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
@@ -10,10 +10,10 @@ using System.Net;
 using System.Text;
 using System.Threading;
 
-namespace GatewayKernelTests
+namespace HubTests
 {
     [TestClass]
-    public class RequestDispatcherTests
+    public class ServerTests
     {
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
@@ -25,7 +25,7 @@ namespace GatewayKernelTests
             var emptyPlugins = new List<ISingleSessionPlugin>();
 
             creator.Setup(c => c.GetTask()).Returns(task.Object);
-            using (var target = new RequestDispatcher(creator.Object))
+            using (var target = new Server(creator.Object))
             {
                 target.StartDispatching(endpoint, new List<ISingleSessionPlugin>());
                 target.StartDispatching(endpoint, new List<ISingleSessionPlugin>());
@@ -45,7 +45,7 @@ namespace GatewayKernelTests
             List<ISingleSessionPlugin> plugins = new List<ISingleSessionPlugin>();
             List<byte> mockPacket = new List<byte>();
 
-            using (var target = new RequestDispatcher(creator.Object))
+            using (var target = new Server(creator.Object))
             {
                 task.Setup(t => t.Run(It.IsAny<Action>(), It.IsAny<string>())).Callback<Action, string>((a, s) => a());
                 creator.Setup(c => c.GetTask()).Returns(task.Object);
@@ -97,7 +97,7 @@ namespace GatewayKernelTests
             var headerBytes = Encoding.UTF8.GetBytes("Mocked");
             var dataBytes = Encoding.UTF8.GetBytes("This is a test.");
 
-            using (var target = new RequestDispatcher(creator.Object))
+            using (var target = new Server(creator.Object))
             {
                 mockPlugin.Setup(p => p.Respond(It.Is<IEnumerable<byte>>(request => AreSame(dataBytes, request)))).Returns(responsePacket).Verifiable();
                 task.Setup(t => t.Run(It.IsAny<Action>(), It.IsAny<string>())).Callback<Action, string>((a, s) => a());
@@ -156,7 +156,7 @@ namespace GatewayKernelTests
             var headerBytes = Encoding.UTF8.GetBytes("Mocked");
             var dataBytes = Encoding.UTF8.GetBytes("This is a test.");
 
-            using (var target = new RequestDispatcher(creator.Object))
+            using (var target = new Server(creator.Object))
             {
                 mockPlugin.Setup(p => p.Respond(It.Is<IEnumerable<byte>>(request => AreSame(dataBytes, request)))).Returns(responsePacket).Verifiable();
                 task.Setup(t => t.Run(It.IsAny<Action>(), It.IsAny<string>())).Callback<Action, string>((a, s) => a());

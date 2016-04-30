@@ -1,7 +1,8 @@
-﻿using GatewayKernel.TestingInterfaces;
+﻿using Hub.TestingInterfaces;
+using System;
 using System.Net;
 
-namespace GatewayKernel.TestingClasses
+namespace Hub.TestingClasses
 {
     public class ObjectCreator : IObjectCreator
     {
@@ -20,7 +21,19 @@ namespace GatewayKernel.TestingClasses
 
         public void Dispose()
         {
-            
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool managedResourceCleanUp)
+        {
+            if (managedResourceCleanUp)
+            {
+                // free managed resources
+               
+            }
+
+            // free native resources if there are any.
         }
     }
 }

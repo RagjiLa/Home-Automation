@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace GatewayKernel.TestingInterfaces
+namespace Hub.TestingInterfaces
 {
     public interface ITcpListner
     {

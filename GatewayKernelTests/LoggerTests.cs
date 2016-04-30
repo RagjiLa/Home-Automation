@@ -1,9 +1,9 @@
-﻿using GatewayKernel;
+﻿using Hub;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Threading;
 
-namespace GatewayKernelTests
+namespace HubTests
 {
     [TestClass]
     public class LoggerTests

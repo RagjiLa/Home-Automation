@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GatewayKernel.TestingInterfaces
+namespace Hub.TestingInterfaces
 {
     public interface ITask
     {

@@ -1,11 +1,11 @@
-﻿using GatewayKernel;
+﻿using Hub;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace GatewayKernelTests
+namespace HubTests
 {
     [TestClass]
     public class SessionExecutorTests

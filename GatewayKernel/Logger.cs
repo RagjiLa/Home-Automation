@@ -1,10 +1,10 @@
 ﻿using System;
 
-namespace GatewayKernel
+namespace Hub
 {
     public static class Logger
     {
-        public delegate void LogedEventHandler(object source, LoggedArgs args);
+        public delegate void LogedEventHandler(object sender, LoggedArgs e);
         public static event LogedEventHandler Logged;
         
         public static void Log(string msg)

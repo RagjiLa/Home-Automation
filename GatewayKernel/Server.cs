@@ -1,4 +1,4 @@
-﻿using GatewayKernel.TestingInterfaces;
+﻿using Hub.TestingInterfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,9 +7,9 @@ using System.Net;
 using System.Text;
 using System.Threading;
 
-namespace GatewayKernel
+namespace Hub
 {
-    public class RequestDispatcher : IDisposable
+    public class Server : IDisposable
     {
         private Dictionary<string, SessionExecutor> _responders = new Dictionary<string, SessionExecutor>();
         private CancellationTokenSource _tokenSource = new CancellationTokenSource();
@@ -17,7 +17,7 @@ namespace GatewayKernel
         private readonly IObjectCreator _creator;
         private const byte Sop = 0xFF;
 
-        public RequestDispatcher(IObjectCreator creator)
+        public Server(IObjectCreator creator)
         {
             _creator = creator;
         }
@@ -79,8 +79,7 @@ namespace GatewayKernel
                     if (bytesRead > 1)
                     {
                         //SOP(1) LENHeader(4) HEADER LENData(4) DATA LENCrc(4) CRC
-                        using (var dataMs = new MemoryStream(databuff))
-                        using (var dataReader = new BinaryReader(dataMs))
+                        using (var dataReader = new BinaryReader(new MemoryStream(databuff), Encoding.UTF8, false))
                         {
                             if (IsStartOfPacket(dataReader.ReadByte()))
                             {
@@ -157,17 +156,30 @@ namespace GatewayKernel
 
         public void Dispose()
         {
-            if (_IsDispatchingActive != null)
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool managedResourceCleanUp)
+        {
+            if (managedResourceCleanUp)
             {
-                _IsDispatchingActive.Set();
-                _IsDispatchingActive.Close();
-                _IsDispatchingActive.Dispose();
-                _IsDispatchingActive = null;
+                // free managed resources
+                if (_IsDispatchingActive != null)
+                {
+                    _IsDispatchingActive.Set();
+                    _IsDispatchingActive.Close();
+                    _IsDispatchingActive.Dispose();
+                    _IsDispatchingActive = null;
+                }
+                if (_tokenSource != null)
+                {
+                    _tokenSource.Cancel();
+                    _tokenSource.Dispose();
+                }
             }
-            if (_tokenSource != null)
-            {
-                _tokenSource.Cancel();
-            }
+
+            // free native resources if there are any.
         }
     }
 }

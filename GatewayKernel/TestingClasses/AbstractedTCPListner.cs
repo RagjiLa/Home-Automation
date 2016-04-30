@@ -1,9 +1,9 @@
-﻿using GatewayKernel.TestingInterfaces;
+﻿using Hub.TestingInterfaces;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace GatewayKernel.TestingClasses
+namespace Hub.TestingClasses
 {
     public class AbstractedTcpListner : ITcpListner
     {

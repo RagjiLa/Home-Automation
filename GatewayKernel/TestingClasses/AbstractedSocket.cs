@@ -1,9 +1,9 @@
 ﻿using System;
-using GatewayKernel.TestingInterfaces;
+using Hub.TestingInterfaces;
 using System.Net;
 using System.Net.Sockets;
 
-namespace GatewayKernel.TestingClasses
+namespace Hub.TestingClasses
 {
     public class AbstractedSocket : ISocket
     {
@@ -28,7 +28,19 @@ namespace GatewayKernel.TestingClasses
 
         public void Dispose()
         {
-            if (_activeSocket != null) _activeSocket.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool managedResourceCleanUp)
+        {
+            if (managedResourceCleanUp)
+            {
+                // free managed resources
+                if (_activeSocket != null) _activeSocket.Dispose();
+            }
+
+            // free native resources if there are any.
         }
     }
 }

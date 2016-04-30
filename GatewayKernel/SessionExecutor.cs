@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Threading;
 
-namespace GatewayKernel
+namespace Hub
 {
     public class SessionExecutor : ISingleSessionPlugin, IDisposable
     {
         private ISingleSessionPlugin _plugin;
-        private AutoResetEvent _oneThreadSession = new AutoResetEvent(true);
+        private object _singleThreadSync = new object();
         private bool _disposed = false;
         Mutex _sessionSync = new Mutex();
 
@@ -68,7 +68,7 @@ namespace GatewayKernel
         public SessionExecutor CreateNewSession()
         {
             if (!CanHaveMultipleSessions) throw new InvalidOperationException("Plugin doesnot support multiple sessions.");
-            lock (_oneThreadSession)
+            lock (_singleThreadSync)
             {
                 return new SessionExecutor((_plugin as IMultiSessionPlugin).Clone());
             }
@@ -76,10 +76,21 @@ namespace GatewayKernel
 
         public void Dispose()
         {
-            _disposed = true;
-            _oneThreadSession.Set();
-            _plugin = null;
-            _oneThreadSession.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool managedResourceCleanUp)
+        {
+            if (managedResourceCleanUp)
+            {
+                // free managed resources
+                _disposed = true;
+                _plugin = null;
+                _sessionSync.Dispose();
+            }
+
+            // free native resources if there are any.
         }
     }
 }

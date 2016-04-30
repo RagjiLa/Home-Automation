@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GatewayKernel", "GatewayKernel\GatewayKernel.csproj", "{83948636-C500-4B17-BCC1-0B62086E348E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hub", "GatewayKernel\Hub.csproj", "{83948636-C500-4B17-BCC1-0B62086E348E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GatewayTests", "GatewayKernelTests\GatewayTests.csproj", "{F59A6D48-FA0D-4E38-94C2-9A277DAAA972}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HubTests", "GatewayKernelTests\HubTests.csproj", "{F59A6D48-FA0D-4E38-94C2-9A277DAAA972}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GatewayPlugins", "GatewayPlugins\GatewayPlugins.csproj", "{A169E47E-9EC1-4BE3-831A-5E6A4893F89B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HubPlugins", "GatewayPlugins\HubPlugins.csproj", "{A169E47E-9EC1-4BE3-831A-5E6A4893F89B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleHost", "ConsoleHost\ConsoleHost.csproj", "{E36D399E-FDD6-4975-8F71-E818DAFE2965}"
 EndProject

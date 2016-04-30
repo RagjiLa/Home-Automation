@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 
-namespace GatewayKernel.TestingInterfaces
+namespace Hub.TestingInterfaces
 {
     public interface ISocket : IDisposable
     {

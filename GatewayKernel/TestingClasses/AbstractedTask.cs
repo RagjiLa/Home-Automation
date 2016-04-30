@@ -1,17 +1,17 @@
-﻿using GatewayKernel.TestingInterfaces;
+﻿using Hub.TestingInterfaces;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace GatewayKernel.TestingClasses
+namespace Hub.TestingClasses
 {
-    public class AbstractedTask:ITask
+    public class AbstractedTask : ITask
     {
-        public void Run(Action block,string name)
+        public void Run(Action block, string name)
         {
             Task.Run(() =>
             {
-                Thread.CurrentThread.Name =name;
+                Thread.CurrentThread.Name = name;
                 block();
             });
         }
