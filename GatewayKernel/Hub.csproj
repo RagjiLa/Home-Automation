@@ -41,10 +41,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Utilities\CacheService.cs" />
+    <Compile Include="Utilities\DataParser.cs" />
     <Compile Include="IMultiSessionPlugin.cs" />
     <Compile Include="SessionExecutor.cs" />
     <Compile Include="ISingleSessionPlugin.cs" />
-    <Compile Include="Logger.cs" />
+    <Compile Include="Utilities\FiniteQue.cs" />
+    <Compile Include="Utilities\Logger.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestingClasses\AbstractedSocket.cs" />

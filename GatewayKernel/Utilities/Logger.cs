@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Hub
+namespace Hub.Utilities
 {
     public static class Logger
     {
