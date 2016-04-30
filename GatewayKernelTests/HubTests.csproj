@@ -53,10 +53,11 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="LoggerTests.cs" />
+    <Compile Include="Utilities\LoggerTests.cs" />
     <Compile Include="ServerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SessionExecutorTests.cs" />
+    <Compile Include="Utilities\CacheServiceTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GatewayKernel\Hub.csproj">
