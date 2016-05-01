@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HubPlugins", "GatewayPlugin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleHost", "ConsoleHost\ConsoleHost.csproj", "{E36D399E-FDD6-4975-8F71-E818DAFE2965}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceSimulator", "DeviceSimulator\DeviceSimulator.csproj", "{A2AEF734-681B-40ED-9308-5919A10E57D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{E36D399E-FDD6-4975-8F71-E818DAFE2965}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E36D399E-FDD6-4975-8F71-E818DAFE2965}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E36D399E-FDD6-4975-8F71-E818DAFE2965}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2AEF734-681B-40ED-9308-5919A10E57D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2AEF734-681B-40ED-9308-5919A10E57D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2AEF734-681B-40ED-9308-5919A10E57D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2AEF734-681B-40ED-9308-5919A10E57D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

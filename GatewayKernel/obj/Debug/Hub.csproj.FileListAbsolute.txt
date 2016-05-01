@@ -1,0 +1,5 @@
+F:\Git\Home-Automation\GatewayKernel\bin\Debug\Hub.dll
+F:\Git\Home-Automation\GatewayKernel\bin\Debug\Hub.pdb
+F:\Git\Home-Automation\GatewayKernel\obj\Debug\Hub.dll
+F:\Git\Home-Automation\GatewayKernel\obj\Debug\Hub.pdb
+F:\Git\Home-Automation\GatewayKernel\obj\Debug\Hub.csprojResolveAssemblyReference.cache

@@ -1,0 +1,7 @@
+F:\Git\Home-Automation\GatewayPlugins\bin\Debug\HubPlugins.dll
+F:\Git\Home-Automation\GatewayPlugins\bin\Debug\HubPlugins.pdb
+F:\Git\Home-Automation\GatewayPlugins\bin\Debug\Hub.dll
+F:\Git\Home-Automation\GatewayPlugins\bin\Debug\Hub.pdb
+F:\Git\Home-Automation\GatewayPlugins\obj\Debug\HubPlugins.csprojResolveAssemblyReference.cache
+F:\Git\Home-Automation\GatewayPlugins\obj\Debug\HubPlugins.dll
+F:\Git\Home-Automation\GatewayPlugins\obj\Debug\HubPlugins.pdb

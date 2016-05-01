@@ -10,3 +10,7 @@ F:\Git\Home-Automation\ConsoleHost\obj\Debug\ConsoleApplication1.pdb
 F:\Git\Home-Automation\ConsoleHost\bin\Debug\ConsoleApplication1.exe
 F:\Git\Home-Automation\ConsoleHost\bin\Debug\ConsoleApplication1.pdb
 F:\Git\Home-Automation\ConsoleHost\obj\Debug\ConsoleHost.csprojResolveAssemblyReference.cache
+F:\Git\Home-Automation\ConsoleHost\bin\Debug\Hub.dll
+F:\Git\Home-Automation\ConsoleHost\bin\Debug\HubPlugins.dll
+F:\Git\Home-Automation\ConsoleHost\bin\Debug\Hub.pdb
+F:\Git\Home-Automation\ConsoleHost\bin\Debug\HubPlugins.pdb

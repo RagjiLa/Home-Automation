@@ -48,7 +48,7 @@ namespace Hub.Utilities
                         stringData += kvp.Key + ":" + kvp.Value + ",";
                     }
                     if (stringData != string.Empty)
-                        convertedData = encoding.GetBytes(stringData.Remove(stringData.Length-1, 1));
+                        convertedData = encoding.GetBytes(stringData.Remove(stringData.Length - 1, 1));
                 }
                 catch (Exception ex)
                 {

@@ -1,0 +1,6 @@
+F:\Git\Home-Automation\DeviceSimulator\bin\Debug\DeviceSimulator.exe.config
+F:\Git\Home-Automation\DeviceSimulator\bin\Debug\DeviceSimulator.exe
+F:\Git\Home-Automation\DeviceSimulator\bin\Debug\DeviceSimulator.pdb
+F:\Git\Home-Automation\DeviceSimulator\obj\Debug\DeviceSimulator.csprojResolveAssemblyReference.cache
+F:\Git\Home-Automation\DeviceSimulator\obj\Debug\DeviceSimulator.exe
+F:\Git\Home-Automation\DeviceSimulator\obj\Debug\DeviceSimulator.pdb

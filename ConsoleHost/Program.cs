@@ -7,6 +7,10 @@ using System.Net.Sockets;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using Hub;
+using Hub.TestingClasses;
+using HubPlugins;
+using Hub.Utilities;
 
 namespace ConsoleApplication1
 {
@@ -14,25 +18,19 @@ namespace ConsoleApplication1
     {
         static void Main(string[] args)
         {
-            using (var client = new HttpClient())
-            {
-                //            var values = new Dictionary<string, string>
-                //{
-                //   { "thing1", "hello" },
-                //   { "thing2", "world" }
-                //};
-
-                //            var content = new FormUrlEncodedContent(values);
-                
-                StringContent c = new StringContent(@"{""W"":""152""}", Encoding.UTF8, "application/json");
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                // client.DefaultRequestHeaders.Add("Content-Type", "application/json");
-                var response = client.PostAsync("http://dweet.io/dweet/for/PlantManager442214Config", c).Result;
-
-                var responseString = response.Content.ReadAsStringAsync().Result;
-                Console.WriteLine(responseString);
-            }
+            Console.Title = "Hub Host";
+            CacheService<float> floatcs = new CacheService<float>();
+            Server s = new Server(new ObjectCreator());
+            DweetPlugin dp = new DweetPlugin();
+            PlantMangerPlugin pm = new PlantMangerPlugin(360, 10, floatcs);
+            s.StartDispatching(new IPEndPoint(IPAddress.Any, 900), new List<ISingleSessionPlugin>() { dp, pm });
+            Logger.Logged += Logger_Logged;
             Console.ReadLine();
+        }
+
+        private static void Logger_Logged(object sender, LoggedArgs e)
+        {
+            Console.WriteLine(e.Message);
         }
     }
 }
