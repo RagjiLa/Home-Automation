@@ -9,5 +9,4 @@ F:\Git\Home-Automation\ConsoleHost\obj\Debug\ConsoleApplication1.exe
 F:\Git\Home-Automation\ConsoleHost\obj\Debug\ConsoleApplication1.pdb
 F:\Git\Home-Automation\ConsoleHost\bin\Debug\ConsoleApplication1.exe
 F:\Git\Home-Automation\ConsoleHost\bin\Debug\ConsoleApplication1.pdb
-F:\Git\Home-Automation\ConsoleHost\bin\Debug\ConsoleApplication1.exe.CodeAnalysisLog.xml
-F:\Git\Home-Automation\ConsoleHost\bin\Debug\ConsoleApplication1.exe.lastcodeanalysissucceeded
+F:\Git\Home-Automation\ConsoleHost\obj\Debug\ConsoleHost.csprojResolveAssemblyReference.cache

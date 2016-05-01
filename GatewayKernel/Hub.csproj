@@ -41,6 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ISample.cs" />
+    <Compile Include="PluginName.cs" />
     <Compile Include="Utilities\CacheService.cs" />
     <Compile Include="Utilities\DataParser.cs" />
     <Compile Include="IMultiSessionPlugin.cs" />
@@ -58,6 +60,8 @@
     <Compile Include="TestingInterfaces\ISocket.cs" />
     <Compile Include="TestingInterfaces\ITask.cs" />
     <Compile Include="TestingInterfaces\ITCPListner.cs" />
+    <Compile Include="MessageBus.cs" />
+    <Compile Include="Utilities\PacketGenerator.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

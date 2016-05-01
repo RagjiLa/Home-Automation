@@ -1,12 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using Hub.Utilities;
+using System.Collections.Generic;
 
 namespace Hub
 {
     public interface ISingleSessionPlugin
     {
-        string Name { get; }
-        IEnumerable<byte> Respond(IEnumerable<byte> data);
-        void PostResponseProcess(IEnumerable<byte> requestData, IEnumerable<byte> responseData);
+        PluginName Name { get; }
+        ISample AssociatedSample { get; }
+        IEnumerable<byte> Respond(ISample sample);
+        void PostResponseProcess(ISample requestSample, IEnumerable<byte> responseData, MessageBus communicationBus);
     }
-   
+
 }

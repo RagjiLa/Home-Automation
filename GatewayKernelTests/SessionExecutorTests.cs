@@ -16,7 +16,7 @@ namespace HubTests
             using (var handle = new ManualResetEvent(false))
             {
                 var singleSessionPlugin = new Mock<ISingleSessionPlugin>();
-                singleSessionPlugin.Setup(s => s.PostResponseProcess(It.IsAny<IEnumerable<byte>>(), It.IsAny<IEnumerable<byte>>())).Callback(() =>
+                singleSessionPlugin.Setup(s => s.PostResponseProcess(It.IsAny<IEnumerable<byte>>(), It.IsAny<IEnumerable<byte>>(), It.IsAny<MessageBus>())).Callback(() =>
                 {
                     handle.Set();
                 });
@@ -26,11 +26,11 @@ namespace HubTests
                     Thread predatorThread = new Thread(() =>
                     {
                         Thread.CurrentThread.Name = "Predator Thread";
-                        target.PostResponseProcess(new byte[0], new byte[0]);
+                        target.PostResponseProcess(new byte[0], new byte[0],null);
                     });
                     predatorThread.Start();
                     Assert.IsFalse(handle.WaitOne(TimeSpan.FromSeconds(1)), "Session broke other method executed on another thread.");
-                    target.PostResponseProcess(new byte[0], new byte[0]);
+                    target.PostResponseProcess(new byte[0], new byte[0],null);
                     Assert.IsTrue(handle.WaitOne(TimeSpan.FromSeconds(1)), "Session did not complete.");
                 }
             }

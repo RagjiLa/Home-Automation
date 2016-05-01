@@ -2,6 +2,8 @@
 using Hub.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Net;
 
 namespace HubPlugins
 {
@@ -10,13 +12,21 @@ namespace HubPlugins
         private CacheService<float> _variableRam = null;
         private uint _defaultdrytime = 360;
         private byte _defaultWateringTime = 5;
-        PlantDataSample _parsedData = null;
+        private PlantDataSample _parsedData = null;
 
-        public string Name
+        public ISample AssociatedSample
         {
             get
             {
-                return "PM";
+                return new PlantDataSample(); 
+            }
+        }
+
+        public PluginName Name
+        {
+            get
+            {
+                return PluginName.PlantManagerPlugin;
             }
         }
 
@@ -28,24 +38,13 @@ namespace HubPlugins
             _defaultWateringTime = wateringTimeInSeconds;
         }
 
-        public void PostResponseProcess(IEnumerable<byte> requestData, IEnumerable<byte> responseData)
+        public IEnumerable<byte> Respond(ISample sample)
         {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<byte> Respond(IEnumerable<byte> data)
-        {
-            //Parse Data
             //Run Algo
             //Answer to water or not in seconds to keep the pump on
-            if (PlantDataSample.TryParse(data, out _parsedData))
-            {
-                return new byte[] { WateringAlgo(_parsedData) };
-            }
-            else
-            {
-                return new byte[0];
-            }
+
+            _parsedData = sample as PlantDataSample;
+            return new byte[] { WateringAlgo(_parsedData) };
         }
 
         private byte WateringAlgo(PlantDataSample parsedData)
@@ -57,7 +56,7 @@ namespace HubPlugins
             if (dryCounter == 0)
             {
                 dryCounter = _defaultdrytime;
-                returnValue= _defaultWateringTime;
+                returnValue = _defaultWateringTime;
             }
             _variableRam.SetValue(dryCounterName, dryCounter);
             return returnValue;
@@ -67,39 +66,65 @@ namespace HubPlugins
         {
             return new PlantMangerPlugin(_defaultdrytime, _defaultWateringTime, _variableRam);
         }
+
+        public void PostResponseProcess(ISample requestSample, IEnumerable<byte> responseData, MessageBus communicationBus)
+        {
+            var sample = new DweetSample(_parsedData.Id, _parsedData.ToJsonString());
+            communicationBus.Invoke(PluginName.DweetPlugin, sample);
+        }
     }
 
-    public class PlantDataSample
+    public class PlantDataSample : ISample
     {
-        public float SoilMoisture { get; set; }
-        public float SoilTemperature { get; set; }
-        public bool IsWaterAvailable { get; set; }
-        public DateTime TimestampLocal { get; set; }
-        public string Id { get; set; }
-
-        private PlantDataSample(Dictionary<string, string> parsedData)
-        {
-            SoilTemperature = float.Parse(parsedData["T"]);
-            SoilMoisture = float.Parse(parsedData["M"]);
-            IsWaterAvailable = bool.Parse(parsedData["W"]);
-            TimestampLocal = DateTime.Now;
-            Id = parsedData["I"];
-        }
+        public float SoilMoisture { get; private set; }
+        public float SoilTemperature { get; private set; }
+        public bool IsWaterAvailable { get; private set; }
+        public DateTime TimestampUTC { get; private set; }
+        public string Id { get; private set; }
 
         public static bool TryParse(IEnumerable<byte> rawData, out PlantDataSample sample)
         {
-            Dictionary<string, string> parsedData = null;
+            IDictionary<string, string> parsedData = null;
             var result = DataParser.TryParse(rawData, out parsedData);
             if (result == null)
             {
-                sample = new PlantDataSample(parsedData);
+                sample = new PlantDataSample();
+                sample.FromKeyValuePair(parsedData);
                 return true;
             }
             else
             {
                 sample = null;
-                Logger.Error(new Exception("PlantManager", result));
+                Logger.Error(new Exception("PlantDataSample", result));
                 return false;
+            }
+        }
+
+        public IDictionary<string, string> ToKeyValuePair()
+        {
+            var kvpData = new Dictionary<string, string>();
+            kvpData.Add("T", SoilTemperature.ToString(CultureInfo.InvariantCulture));
+            kvpData.Add("M", SoilMoisture.ToString(CultureInfo.InvariantCulture));
+            kvpData.Add("W", IsWaterAvailable.ToString(CultureInfo.InvariantCulture));
+            kvpData.Add("I", Id);
+            kvpData.Add("Ts", TimestampUTC.ToBinary().ToString(CultureInfo.InvariantCulture));
+            return kvpData;
+        }
+
+        public void FromKeyValuePair(IDictionary<string, string> kvpData)
+        {
+            Id = kvpData["I"];
+            SoilTemperature = float.Parse(kvpData["T"], CultureInfo.InvariantCulture);
+            SoilMoisture = float.Parse(kvpData["M"], CultureInfo.InvariantCulture);
+            IsWaterAvailable = bool.Parse(kvpData["W"]);
+            if (kvpData.ContainsKey("Ts"))
+            {
+                var longDt = long.Parse(kvpData["Ts"], CultureInfo.InvariantCulture);
+                TimestampUTC = DateTime.FromBinary(longDt);
+            }
+            else
+            {
+                TimestampUTC = DateTime.UtcNow;
             }
         }
     }

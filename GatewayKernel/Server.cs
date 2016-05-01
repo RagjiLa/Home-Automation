@@ -29,8 +29,8 @@ namespace Hub
             {
                 _IsDispatchingActive.Reset();
                 var threadSafePlugins = plugins.Select(p => new SessionExecutor(p));
-                _responders = threadSafePlugins.ToDictionary(k => k.Name.ToLower());
-                _creator.GetTask().Run(() => ConnectionLoop(listeningEndpoint), "Connection Loop");
+                _responders = threadSafePlugins.ToDictionary(k => k.Name.ToString());
+                _creator.GetTask().Run(() => ListeningLoop(listeningEndpoint), "Listening Loop");
             }
             else
             {
@@ -38,7 +38,7 @@ namespace Hub
             }
         }
 
-        private void ConnectionLoop(IPEndPoint listeningEndpoint)
+        private void ListeningLoop(IPEndPoint listeningEndpoint)
         {
             var coreSocket = _creator.GetTcpListner(listeningEndpoint);
             try
@@ -49,12 +49,12 @@ namespace Hub
                     var clientSocket = coreSocket.AcceptSocket(_tokenSource.Token);
                     if (clientSocket == null)
                         break;
-                    _creator.GetTask().Run(() => ServeConnection(clientSocket), clientSocket.RemoteEndPoint.ToString());
+                    _creator.GetTask().Run(() => ServeConnection(clientSocket, _responders), clientSocket.RemoteEndPoint.ToString());
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error(new Exception("Connection Loop", ex));
+                Logger.Error(new Exception("Listening Loop", ex));
             }
             finally
             {
@@ -66,17 +66,19 @@ namespace Hub
             }
         }
 
-        private void ServeConnection(ISocket connection)
+        private static void ServeConnection(ISocket connection, Dictionary<string, SessionExecutor> responders)
         {
             try
             {
+                Dictionary<string, SessionExecutor> respondersThreadSafeCopy = responders;
+                ISocket connectionThreadSafeCopy = connection;
                 SessionExecutor activeHandler = null;
                 List<byte> responseData = null;
-                List<byte> requestData = null;
-                using (connection)
+                ISample requestSample = null;
+                using (connectionThreadSafeCopy)
                 {
                     byte[] databuff = new byte[1024];
-                    int bytesRead = connection.Receive(databuff);
+                    int bytesRead = connectionThreadSafeCopy.Receive(databuff);
                     if (bytesRead > 1)
                     {
                         //SOP(1) LENHeader(4) HEADER LENData(4) DATA LENCrc(4) CRC
@@ -87,54 +89,59 @@ namespace Hub
                                 var headerlength = dataReader.ReadUInt32();
                                 var packetheader = Encoding.UTF8.GetString(dataReader.ReadBytes((int)headerlength)).ToLower();
                                 var datalength = dataReader.ReadUInt32();
-                                requestData = new List<byte>(dataReader.ReadBytes((int)datalength));
+                                var requestData = new List<byte>(dataReader.ReadBytes((int)datalength));
                                 var crclength = dataReader.ReadUInt32();
                                 var crc = dataReader.ReadBytes((int)crclength);
                                 if (IsCrcValid(databuff, crc, bytesRead))
                                 {
-                                    if (_responders.ContainsKey(packetheader))
+                                    if (respondersThreadSafeCopy.ContainsKey(packetheader))
                                     {
-                                        activeHandler = _responders[packetheader];
+                                        activeHandler = respondersThreadSafeCopy[packetheader];
                                         activeHandler = activeHandler.CanHaveMultipleSessions ? activeHandler.CreateNewSession() : activeHandler;
-                                        var response = activeHandler.Respond(requestData);
+                                        requestSample = activeHandler.AssociatedSample;
+                                        requestSample.FromByteArray(requestData);
+                                        var response = activeHandler.Respond(requestSample);
                                         if (response != null)
                                         {
                                             responseData = new List<byte>(response);
-                                            if (connection.Send(responseData.ToArray()) != responseData.Count())
+                                            if (connectionThreadSafeCopy.Send(responseData.ToArray()) != responseData.Count())
                                             {
                                                 activeHandler = null;
-                                                Logger.Error(connection.RemoteEndPoint + " Sending data failed");
+                                                Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " Sending data failed");
                                             }
                                         }
                                         else
                                         {
                                             activeHandler = null;
-                                            Logger.Error(connection.RemoteEndPoint + " No response was generated from handler or is disposed");
+                                            Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " No response was generated from handler or is disposed");
                                         }
                                     }
                                     else
                                     {
-                                        Logger.Error(connection.RemoteEndPoint + " No handlers for " + packetheader);
+                                        Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " No handlers for " + packetheader);
                                     }
                                 }
                                 else
                                 {
-                                    Logger.Error(connection.RemoteEndPoint + " Invalid CRC (Invalid Packet)");
+                                    Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " Invalid CRC (Invalid Packet)");
                                 }
                             }
                             else
                             {
-                                Logger.Error(connection.RemoteEndPoint + " No SOP Byte found (Invalid Packet)");
+                                Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " No SOP Byte found (Invalid Packet)");
                             }
                         }
                     }
                     else
                     {
-                        Logger.Error(connection.RemoteEndPoint + " No bytes received (Invalid Packet) ");
+                        Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " No bytes received (Invalid Packet) ");
                     }
                 }
                 if (activeHandler != null)
-                    activeHandler.PostResponseProcess(requestData, responseData);
+                {
+                    var messageBus = new MessageBus(respondersThreadSafeCopy, activeHandler.Name);
+                    activeHandler.PostResponseProcess(requestSample, responseData, messageBus);
+                }
             }
             catch (Exception ex)
             {

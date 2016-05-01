@@ -58,7 +58,7 @@ namespace HubTests
                         connectionLoopCounter++;
                         return clientSocket.Object;
                     });
-                mockPlugin.SetupGet(p => p.Name).Returns("Mocked");
+                mockPlugin.SetupGet(p => p.Name).Returns(PluginName.PlantManagerPlugin);
                 plugins.Add(mockPlugin.Object);
                 mockPacket.Add(0xFF);
                 creator.Setup(c => c.GetTcpListner(It.Is<IPEndPoint>(e => e.Equals(endpoint)))).Returns(tcplistner.Object);
@@ -75,7 +75,7 @@ namespace HubTests
                 tcplistner.Verify(t => t.Stop(), Times.Once);
             }
 
-            mockPlugin.Verify(p => p.PostResponseProcess(It.IsAny<IEnumerable<byte>>(), It.IsAny<IEnumerable<byte>>()), Times.Never);
+            mockPlugin.Verify(p => p.PostResponseProcess(It.IsAny<IEnumerable<byte>>(), It.IsAny<IEnumerable<byte>>(), It.IsAny<MessageBus>()), Times.Never);
             mockPlugin.Verify(p => p.Respond(It.IsAny<IEnumerable<byte>>()), Times.Never);
         }
 
@@ -94,7 +94,7 @@ namespace HubTests
             var mockPacket = new MemoryStream(1024);
             var packetWritter = new BinaryWriter(mockPacket);
             var responsePacket = new byte[] { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
-            var headerBytes = Encoding.UTF8.GetBytes("Mocked");
+            var headerBytes = Encoding.UTF8.GetBytes(PluginName.PlantManagerPlugin.ToString());
             var dataBytes = Encoding.UTF8.GetBytes("This is a test.");
 
             using (var target = new Server(creator.Object))
@@ -111,7 +111,7 @@ namespace HubTests
                         connectionLoopCounter++;
                         return clientSocket.Object;
                     });
-                mockPlugin.SetupGet(p => p.Name).Returns("Mocked");
+                mockPlugin.SetupGet(p => p.Name).Returns(PluginName.PlantManagerPlugin);
                 plugins.Add(mockPlugin.Object);
                 creator.Setup(c => c.GetTcpListner(It.Is<IPEndPoint>(e => e.Equals(endpoint)))).Returns(tcplistner.Object);
                 clientSocket.SetupGet(c => c.RemoteEndPoint).Returns(endpoint);
@@ -134,7 +134,7 @@ namespace HubTests
                 tcplistner.Verify(t => t.Stop(), Times.Once);
             }
 
-            mockPlugin.Verify(p => p.PostResponseProcess(It.Is<IEnumerable<byte>>(request => AreSame(dataBytes, request)), It.Is<IEnumerable<byte>>(response => AreSame(responsePacket, response))), Times.Once);
+            mockPlugin.Verify(p => p.PostResponseProcess(It.Is<IEnumerable<byte>>(request => AreSame(dataBytes, request)), It.Is<IEnumerable<byte>>(response => AreSame(responsePacket, response)), It.IsAny<MessageBus>()), Times.Once);
             mockPlugin.VerifyAll();
         }
 
@@ -153,7 +153,7 @@ namespace HubTests
             var mockPacket = new MemoryStream(1024);
             var packetWritter = new BinaryWriter(mockPacket);
             var responsePacket = new byte[] { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
-            var headerBytes = Encoding.UTF8.GetBytes("Mocked");
+            var headerBytes = Encoding.UTF8.GetBytes(PluginName.PlantManagerPlugin.ToString());
             var dataBytes = Encoding.UTF8.GetBytes("This is a test.");
 
             using (var target = new Server(creator.Object))
@@ -170,7 +170,7 @@ namespace HubTests
                         connectionLoopCounter++;
                         return clientSocket.Object;
                     });
-                mockPlugin.SetupGet(p => p.Name).Returns("Mocked");
+                mockPlugin.SetupGet(p => p.Name).Returns(PluginName.PlantManagerPlugin);
                 plugins.Add(mockPlugin.Object);
                 creator.Setup(c => c.GetTcpListner(It.Is<IPEndPoint>(e => e.Equals(endpoint)))).Returns(tcplistner.Object);
                 clientSocket.SetupGet(c => c.RemoteEndPoint).Returns(endpoint);
@@ -193,7 +193,7 @@ namespace HubTests
                 tcplistner.Verify(t => t.Stop(), Times.Once);
             }
 
-            mockPlugin.Verify(p => p.PostResponseProcess(It.IsAny<IEnumerable<byte>>(), It.IsAny<IEnumerable<byte>>()), Times.Never);
+            mockPlugin.Verify(p => p.PostResponseProcess(It.IsAny<IEnumerable<byte>>(), It.IsAny<IEnumerable<byte>>(), It.IsAny<MessageBus>()), Times.Never);
             mockPlugin.VerifyAll();
         }
 

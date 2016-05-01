@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Hub.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -11,7 +12,7 @@ namespace Hub
         private bool _disposed = false;
         Mutex _sessionSync = new Mutex();
 
-        public string Name
+        public PluginName Name
         {
             get
             {
@@ -27,18 +28,26 @@ namespace Hub
             }
         }
 
+        public ISample AssociatedSample
+        {
+            get
+            {
+                return _plugin.AssociatedSample;
+            }
+        }
+
         public SessionExecutor(ISingleSessionPlugin plugin)
         {
             _plugin = plugin;
         }
 
-        public void PostResponseProcess(IEnumerable<byte> requestData, IEnumerable<byte> responseData)
+        public void PostResponseProcess(ISample requestSample, IEnumerable<byte> responseData, MessageBus communicationBus)
         {
             try
             {
             Wait: if (_sessionSync.WaitOne(3))
                 {
-                    if (!_disposed) _plugin.PostResponseProcess(requestData, responseData);
+                    if (!_disposed) _plugin.PostResponseProcess(requestSample, responseData, communicationBus);
                 }
                 else
                 {
@@ -51,12 +60,12 @@ namespace Hub
             }
         }
 
-        public IEnumerable<byte> Respond(IEnumerable<byte> data)
+        public IEnumerable<byte> Respond(ISample sample)
         {
 
         Wait: if (_sessionSync.WaitOne(3))
             {
-                if (!_disposed) return _plugin.Respond(data);
+                if (!_disposed) return _plugin.Respond(sample);
             }
             else
             {
