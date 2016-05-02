@@ -1,2 +1,4 @@
-*.exe
-*.dll
+*\bin\*.exe
+*\bin\*.dll
+*\bin\*.pdb
+*\TestResults
