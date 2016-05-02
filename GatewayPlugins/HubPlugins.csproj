@@ -49,6 +49,10 @@
       <Project>{83948636-c500-4b17-bcc1-0b62086e348e}</Project>
       <Name>Hub</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Kernel\Kernel.csproj">
+      <Project>{df0dac27-7f94-46ff-ac40-803772101c8d}</Project>
+      <Name>Kernel</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

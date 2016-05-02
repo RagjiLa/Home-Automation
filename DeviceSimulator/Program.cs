@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Kernel;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,12 +19,15 @@ namespace DeviceSimulator
 
             using (var device = new TcpClient())
             {
-                device.Connect(new IPEndPoint(IPAddress.Parse("192.168.1.5"), 900));
+                device.Connect(new IPEndPoint(GetLocalIPAddress(), 900));
                 Console.WriteLine("Connected to hub");
-                var data = new Dictionary<string, string>();
-                data.Add("W", "5");
-                var jsonData = ToJsonString(data);
-                var packet = GeneratePacket(Encoding.UTF8.GetBytes("DP"), Encoding.UTF8.GetBytes("T:PlantManager442214Config,D:" + jsonData)).ToList();
+                var jsongData = new Dictionary<string, string>();
+                jsongData.Add("W", "8");
+                var jsonString = ToJsonString(jsongData);
+                var pluginData = new Dictionary<string, string>();
+                pluginData.Add("T", "TagLaukik");
+                pluginData.Add("D", jsonString);
+                var packet = DataParser.GeneratePacket(PluginName.DweetPlugin, pluginData).ToList();
                 using (var tcpStream = device.GetStream())
                 {
                     tcpStream.Write(packet.ToArray(), 0, packet.Count);
@@ -81,6 +86,26 @@ namespace DeviceSimulator
             jsonString.Remove(jsonString.Length - 1, 1);
             jsonString.Append("}");
             return jsonString.ToString();
+        }
+
+        public static IPAddress GetLocalIPAddress()
+        {
+            if (NetworkInterface.GetIsNetworkAvailable())
+            {
+                var host = Dns.GetHostEntry(Dns.GetHostName());
+                foreach (var ip in host.AddressList)
+                {
+                    if (ip.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        return ip;
+                    }
+                }
+                throw new Exception("Local IP Address Not Found!");
+            }
+            else
+            {
+                throw new Exception("Network not connected");
+            }
         }
     }
 }

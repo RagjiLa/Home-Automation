@@ -10,7 +10,8 @@ using System.Net.Http.Headers;
 using Hub;
 using Hub.TestingClasses;
 using HubPlugins;
-using Hub.Utilities;
+using Kernel;
+using System.Net.NetworkInformation;
 
 namespace ConsoleApplication1
 {
@@ -23,7 +24,7 @@ namespace ConsoleApplication1
             Server s = new Server(new ObjectCreator());
             DweetPlugin dp = new DweetPlugin();
             PlantMangerPlugin pm = new PlantMangerPlugin(360, 10, floatcs);
-            s.StartDispatching(new IPEndPoint(IPAddress.Any, 900), new List<ISingleSessionPlugin>() { dp, pm });
+            s.StartDispatching(new IPEndPoint(GetLocalIPAddress(), 900), new List<ISingleSessionPlugin>() { dp, pm });
             Logger.Logged += Logger_Logged;
             Console.ReadLine();
         }
@@ -31,6 +32,26 @@ namespace ConsoleApplication1
         private static void Logger_Logged(object sender, LoggedArgs e)
         {
             Console.WriteLine(e.Message);
+        }
+
+        public static IPAddress GetLocalIPAddress()
+        {
+            if (NetworkInterface.GetIsNetworkAvailable())
+            {
+                var host = Dns.GetHostEntry(Dns.GetHostName());
+                foreach (var ip in host.AddressList)
+                {
+                    if (ip.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        return ip;
+                    }
+                }
+                throw new Exception("Local IP Address Not Found!");
+            }
+            else
+            {
+                throw new Exception("Network not connected");
+            }
         }
     }
 }

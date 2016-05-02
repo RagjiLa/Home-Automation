@@ -1,5 +1,5 @@
 ﻿using Hub.TestingInterfaces;
-using Hub.Utilities;
+using Kernel;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -81,49 +81,71 @@ namespace Hub
                     int bytesRead = connectionThreadSafeCopy.Receive(databuff);
                     if (bytesRead > 1)
                     {
-                        //SOP(1) LENHeader(4) HEADER LENData(4) DATA LENCrc(4) CRC
+                        //SOP 
+                        //Header(1) DataLen(2) Data(X)
+                        //H(1)         HeaderDATA
+                        //D(1)         DataPlayload
+                        //C(1)         CRCDATA(4)  
                         using (var dataReader = new BinaryReader(new MemoryStream(databuff), Encoding.UTF8, false))
                         {
                             if (IsStartOfPacket(dataReader.ReadByte()))
                             {
-                                var headerlength = dataReader.ReadUInt32();
-                                var packetheader = Encoding.UTF8.GetString(dataReader.ReadBytes((int)headerlength)).ToLower();
-                                var datalength = dataReader.ReadUInt32();
-                                var requestData = new List<byte>(dataReader.ReadBytes((int)datalength));
-                                var crclength = dataReader.ReadUInt32();
-                                var crc = dataReader.ReadBytes((int)crclength);
-                                if (IsCrcValid(databuff, crc, bytesRead))
+                                var parsedPacket = DataParser.ToKeyValuePairsBinary(databuff.Skip(1).Take(bytesRead - 1));
+                                if (parsedPacket.ContainsKey("C"))
                                 {
-                                    if (respondersThreadSafeCopy.ContainsKey(packetheader))
+                                    if (IsCrcValid(parsedPacket["C"], bytesRead))
                                     {
-                                        activeHandler = respondersThreadSafeCopy[packetheader];
-                                        activeHandler = activeHandler.CanHaveMultipleSessions ? activeHandler.CreateNewSession() : activeHandler;
-                                        requestSample = activeHandler.AssociatedSample;
-                                        requestSample.FromByteArray(requestData);
-                                        var response = activeHandler.Respond(requestSample);
-                                        if (response != null)
+                                        if (parsedPacket.ContainsKey("H"))
                                         {
-                                            responseData = new List<byte>(response);
-                                            if (connectionThreadSafeCopy.Send(responseData.ToArray()) != responseData.Count())
+                                            var packetheader = Encoding.UTF8.GetString(parsedPacket["H"].ToArray());
+                                            if (parsedPacket.ContainsKey("D"))
                                             {
-                                                activeHandler = null;
-                                                Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " Sending data failed");
+                                                var requestData = parsedPacket["D"];
+                                                if (respondersThreadSafeCopy.ContainsKey(packetheader))
+                                                {
+                                                    activeHandler = respondersThreadSafeCopy[packetheader];
+                                                    activeHandler = activeHandler.CanHaveMultipleSessions ? activeHandler.CreateNewSession() : activeHandler;
+                                                    requestSample = activeHandler.AssociatedSample;
+                                                    requestSample.FromByteArray(requestData);
+                                                    var response = activeHandler.Respond(requestSample);
+                                                    if (response != null)
+                                                    {
+                                                        responseData = new List<byte>(response);
+                                                        if (connectionThreadSafeCopy.Send(responseData.ToArray()) != responseData.Count())
+                                                        {
+                                                            activeHandler = null;
+                                                            Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " Sending data failed");
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        activeHandler = null;
+                                                        Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " No response was generated from handler or is disposed");
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " No handlers for " + packetheader);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " No data info (Invalid Packet)");
                                             }
                                         }
                                         else
                                         {
-                                            activeHandler = null;
-                                            Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " No response was generated from handler or is disposed");
+                                            Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " No handler info (Invalid Packet)");
                                         }
                                     }
                                     else
                                     {
-                                        Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " No handlers for " + packetheader);
+                                        Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " Invalid CRC (Invalid Packet)");
                                     }
                                 }
                                 else
                                 {
-                                    Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " Invalid CRC (Invalid Packet)");
+                                    Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " No CRC Info present (Invalid Packet)");
                                 }
                             }
                             else
@@ -149,14 +171,10 @@ namespace Hub
             }
         }
 
-        // ReSharper disable once UnusedParameter.Local
-        private static bool IsCrcValid(byte[] databuff, byte[] crc, int length)
+        private static bool IsCrcValid(IEnumerable<byte> crcData, int bytesread)
         {
             //TODO:Implement CRC
-            using (var reader = new BinaryReader(new MemoryStream(crc), Encoding.UTF8, true))
-            {
-                return length == reader.ReadUInt32();
-            }
+            return BitConverter.ToInt32(crcData.ToArray(), 0) == bytesread;
         }
 
         private static bool IsStartOfPacket(int value)

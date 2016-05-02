@@ -1,5 +1,6 @@
 ﻿using Hub;
 using Hub.TestingInterfaces;
+using Kernel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
@@ -81,7 +82,11 @@ namespace HubTests
         [TestMethod]
         public void VerifyPluginIsInvokedWhenValidRequestAndResponseIsGenerated()
         {
-            //SOP(1) LENPack(4) LENHeader(4) HEADER LENData(4) DATA LENCrc(4) CRC
+            //SOP 
+            //Header(1) DataLen(2) Data(X)
+            //H(1)         HeaderDATA
+            //D(1)         DataPlayload
+            //C(1)         CRCDATA(4)  
             var connectionLoopCounter = 0;
             var creator = new Mock<IObjectCreator>();
             var task = new Mock<ITask>();
@@ -90,10 +95,78 @@ namespace HubTests
             var mockPlugin = new Mock<ISingleSessionPlugin>();
             var endpoint = new IPEndPoint(IPAddress.Any, 9000);
             var plugins = new List<ISingleSessionPlugin>();
-            var mockPacket = new MemoryStream(1024);
-            var packetWritter = new BinaryWriter(mockPacket);
+            var mockPacket = new List<byte>();
             var responsePacket = new byte[] { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
-            var headerBytes = PluginName.DweetPlugin.ToBytes();
+            var plugin = PluginName.DweetPlugin;
+            var testsample = new TestSample();
+            var kvp = new Dictionary<string, string>();
+            kvp.Add("T", "Tag");
+            kvp.Add("D", "{\"f\":\"ggg\"}");
+            var dataBytes = DataParser.FromKeyValuePairs(kvp).ToArray();
+            mockPlugin.SetupGet(p => p.AssociatedSample).Returns(testsample);
+
+            using (var target = new Server(creator.Object))
+            {
+                mockPlugin.Setup(p => p.Respond(It.Is<ISample>(sample => AreSame(dataBytes, sample.ToByteArray())))).Returns(responsePacket).Verifiable();
+                task.Setup(t => t.Run(It.IsAny<Action>(), It.IsAny<string>())).Callback<Action, string>((a, s) => a());
+                creator.Setup(c => c.GetTask()).Returns(task.Object);
+                tcplistner.Setup(t => t.AcceptSocket(It.IsAny<CancellationToken>())).Returns<CancellationToken>(
+                    token =>
+                    {
+                        if (token.IsCancellationRequested || connectionLoopCounter >= 1)
+                            return null;
+
+                        connectionLoopCounter++;
+                        return clientSocket.Object;
+                    });
+                mockPlugin.SetupGet(p => p.Name).Returns(plugin);
+                plugins.Add(mockPlugin.Object);
+                creator.Setup(c => c.GetTcpListner(It.Is<IPEndPoint>(e => e.Equals(endpoint)))).Returns(tcplistner.Object);
+                clientSocket.SetupGet(c => c.RemoteEndPoint).Returns(endpoint);
+                clientSocket.Setup(c => c.Receive(It.Is<byte[]>(b => b.Length == 1024))).Returns<byte[]>(r =>
+                {
+                    int ctr = 0;
+                    foreach (var dataByte in mockPacket.ToArray())
+                    {
+                        r[ctr] = dataByte;
+                        ctr++;
+                    }
+                    return ctr;
+                });
+                clientSocket.Setup(c => c.Send(It.IsAny<byte[]>())).Returns<byte[]>(data => data.Length);
+
+                mockPacket.AddRange(DataParser.GeneratePacket(plugin, kvp));
+
+                target.StartDispatching(endpoint, plugins);
+                tcplistner.Verify(t => t.Start(10), Times.Once);
+                tcplistner.Verify(t => t.Stop(), Times.Once);
+            }
+
+            mockPlugin.Verify(p => p.PostResponseProcess(It.Is<ISample>(sample => AreSame(dataBytes, sample.ToByteArray())), It.Is<IEnumerable<byte>>(response => AreSame(responsePacket, response)), It.IsAny<MessageBus>()), Times.Once);
+            mockPlugin.VerifyAll();
+        }
+
+        [TestMethod]
+        public void VerifyPluginIsNotInvokedWhenSendingFails()
+        {
+            //SOP 
+            //Header(1) DataLen(2) Data(X)
+            //H(1)         HeaderDATA
+            //D(1)         DataPlayload
+            //C(1)         CRCDATA(4)  
+            var connectionLoopCounter = 0;
+            var creator = new Mock<IObjectCreator>();
+            var task = new Mock<ITask>();
+            var tcplistner = new Mock<ITcpListner>();
+            var clientSocket = new Mock<ISocket>();
+            var mockPlugin = new Mock<ISingleSessionPlugin>();
+            var endpoint = new IPEndPoint(IPAddress.Any, 9000);
+            var plugins = new List<ISingleSessionPlugin>();
+            var mockPacket = new List<byte>();
+            var plugin = PluginName.DweetPlugin;
+            //var packetWritter = new BinaryWriter(mockPacket);
+            var responsePacket = new byte[] { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
+            //var headerBytes = Encoding.UTF8.GetBytes(PluginName.PlantManagerPlugin.ToString());
             var testsample = new TestSample();
             var kvp = new Dictionary<string, string>();
             kvp.Add("T", "Tag");
@@ -129,73 +202,9 @@ namespace HubTests
                     }
                     return ctr;
                 });
-                clientSocket.Setup(c => c.Send(It.IsAny<byte[]>())).Returns<byte[]>(data => data.Length);
-
-                GeneratePacket(packetWritter, headerBytes, dataBytes);
-
-                target.StartDispatching(endpoint, plugins);
-                tcplistner.Verify(t => t.Start(10), Times.Once);
-                tcplistner.Verify(t => t.Stop(), Times.Once);
-            }
-
-            mockPlugin.Verify(p => p.PostResponseProcess(It.Is<ISample>(sample => AreSame(dataBytes, sample.ToByteArray())), It.Is<IEnumerable<byte>>(response => AreSame(responsePacket, response)), It.IsAny<MessageBus>()), Times.Once);
-            mockPlugin.VerifyAll();
-        }
-
-        [TestMethod]
-        public void VerifyPluginIsNotInvokedWhenSendingFails()
-        {
-            //SOP(1) LENPack(4) LENHeader(4) HEADER LENData(4) DATA LENCrc(4) CRC
-            var connectionLoopCounter = 0;
-            var creator = new Mock<IObjectCreator>();
-            var task = new Mock<ITask>();
-            var tcplistner = new Mock<ITcpListner>();
-            var clientSocket = new Mock<ISocket>();
-            var mockPlugin = new Mock<ISingleSessionPlugin>();
-            var endpoint = new IPEndPoint(IPAddress.Any, 9000);
-            var plugins = new List<ISingleSessionPlugin>();
-            var mockPacket = new MemoryStream(1024);
-            var packetWritter = new BinaryWriter(mockPacket);
-            var responsePacket = new byte[] { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
-            var headerBytes = Encoding.UTF8.GetBytes(PluginName.PlantManagerPlugin.ToString());
-            var testsample = new TestSample();
-            var kvp = new Dictionary<string, string>();
-            kvp.Add("T", "Tag");
-            kvp.Add("D", "{\"f\":\"ggg\"}");
-            var dataBytes = DataParser.FromKeyValuePairs(kvp).ToArray();
-            mockPlugin.SetupGet(p => p.AssociatedSample).Returns(testsample);
-
-            using (var target = new Server(creator.Object))
-            {
-                mockPlugin.Setup(p => p.Respond(It.Is<ISample>(sample => AreSame(dataBytes, sample.ToByteArray())))).Returns(responsePacket).Verifiable();
-                task.Setup(t => t.Run(It.IsAny<Action>(), It.IsAny<string>())).Callback<Action, string>((a, s) => a());
-                creator.Setup(c => c.GetTask()).Returns(task.Object);
-                tcplistner.Setup(t => t.AcceptSocket(It.IsAny<CancellationToken>())).Returns<CancellationToken>(
-                    token =>
-                    {
-                        if (token.IsCancellationRequested || connectionLoopCounter >= 1)
-                            return null;
-
-                        connectionLoopCounter++;
-                        return clientSocket.Object;
-                    });
-                mockPlugin.SetupGet(p => p.Name).Returns(PluginName.PlantManagerPlugin);
-                plugins.Add(mockPlugin.Object);
-                creator.Setup(c => c.GetTcpListner(It.Is<IPEndPoint>(e => e.Equals(endpoint)))).Returns(tcplistner.Object);
-                clientSocket.SetupGet(c => c.RemoteEndPoint).Returns(endpoint);
-                clientSocket.Setup(c => c.Receive(It.Is<byte[]>(b => b.Length == 1024))).Returns<byte[]>(r =>
-                {
-                    int ctr = 0;
-                    foreach (var dataByte in mockPacket.ToArray())
-                    {
-                        r[ctr] = dataByte;
-                        ctr++;
-                    }
-                    return ctr;
-                });
                 clientSocket.Setup(c => c.Send(It.IsAny<byte[]>())).Returns<byte[]>(data => data.Length - 1);
 
-                GeneratePacket(packetWritter, headerBytes, dataBytes);
+                mockPacket.AddRange(DataParser.GeneratePacket(plugin, kvp));
 
                 target.StartDispatching(endpoint, plugins);
                 tcplistner.Verify(t => t.Start(10), Times.Once);
@@ -218,25 +227,6 @@ namespace HubTests
                 return returnValue;
             }
             return false;
-        }
-
-        private static void GeneratePacket(BinaryWriter packetWritter, byte[] headerBytes, byte[] dataBytes)
-        {
-            uint packetLen = 0;
-            packetWritter.Write((byte)0xFF); //SOP
-            packetLen += 1;
-            packetWritter.Write((UInt32)headerBytes.Length); //Header Length
-            packetLen += 4;
-            packetWritter.Write(headerBytes); //Header
-            packetLen += (uint)headerBytes.Length;
-            packetWritter.Write((UInt32)dataBytes.Length); //DATA Length
-            packetLen += 4;
-            packetWritter.Write(dataBytes); //DATA
-            packetLen += (uint)dataBytes.Length;
-            packetWritter.Write((UInt32)4); //CRC Length
-            packetLen += 4;
-            packetLen += 4;
-            packetWritter.Write(packetLen); //CRC
         }
     }
 

@@ -1,0 +1,4 @@
+F:\Git\Home-Automation\Kernel\bin\Debug\Kernel.dll
+F:\Git\Home-Automation\Kernel\bin\Debug\Kernel.pdb
+F:\Git\Home-Automation\Kernel\obj\Debug\Kernel.dll
+F:\Git\Home-Automation\Kernel\obj\Debug\Kernel.pdb

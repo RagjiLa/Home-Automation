@@ -1,4 +1,5 @@
 ﻿using Hub;
+using Kernel;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -37,7 +38,7 @@ namespace HubPlugins
                 // ReSharper disable once PossibleNullReferenceException
                 StringContent content = new StringContent(sample.Data, Encoding.UTF8, "application/json");
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.PostAsync("http://dweet.io/dweet/for/" + sample.Tag, content).RunSynchronously();
+                var result = client.PostAsync("http://dweet.io/dweet/for/" + sample.Tag, content).Result;
             }
         }
 

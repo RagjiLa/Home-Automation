@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Hub.Utilities
+namespace Kernel
 {
     public class CacheService<T>
     {

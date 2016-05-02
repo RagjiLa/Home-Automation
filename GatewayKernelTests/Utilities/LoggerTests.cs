@@ -1,5 +1,6 @@
 ﻿using Hub;
 using Hub.Utilities;
+using Kernel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Threading;

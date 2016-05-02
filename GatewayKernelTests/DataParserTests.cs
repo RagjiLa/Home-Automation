@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Hub;
 using System.Text;
+using Kernel;
+using System.IO;
 
 namespace HubTests
 {
@@ -14,14 +16,21 @@ namespace HubTests
         {
             var kvpData = new Dictionary<string, string>();
             kvpData.Add("x", "test");
-            var data = DataParser.FromKeyValuePairs(kvpData);
-            var expectedData = new List<byte>();
-            expectedData.Add(Encoding.UTF8.GetBytes("x")[0]);
-            var encodedData = Encoding.UTF8.GetBytes("test");
-            ushot
-            expectedData.AddRange();
-            expectedData.Add(Encoding.UTF8.GetBytes("test")[0]);
-            Assert.IsTrue(ServerTests.AreSame(expectedData, data));
+            var expectedData = new byte[0];
+            using (var memoryStream = new MemoryStream())
+            using (var writer = new BinaryWriter(memoryStream, Encoding.UTF8))
+            {
+                foreach (var kvp in kvpData)
+                {
+                    var encodedData = Encoding.UTF8.GetBytes(kvp.Value);
+                    writer.Write(kvp.Key[0]);
+                    writer.Write((ushort)encodedData.Length);
+                    writer.Write(encodedData);
+                }
+                expectedData = memoryStream.ToArray();
+            }
+            var actualData = DataParser.FromKeyValuePairs(kvpData);
+            Assert.IsTrue(ServerTests.AreSame(expectedData, actualData));
         }
 
         [TestMethod]

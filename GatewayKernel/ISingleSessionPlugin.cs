@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Kernel;
+using System.Collections.Generic;
 
 namespace Hub
 {

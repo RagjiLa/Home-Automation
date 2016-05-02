@@ -8,3 +8,5 @@ E:\Git\RagjiLa\Home-Automation\GatewayKernel\bin\Debug\Hub.pdb
 E:\Git\RagjiLa\Home-Automation\GatewayKernel\obj\Debug\Hub.csprojResolveAssemblyReference.cache
 E:\Git\RagjiLa\Home-Automation\GatewayKernel\obj\Debug\Hub.dll
 E:\Git\RagjiLa\Home-Automation\GatewayKernel\obj\Debug\Hub.pdb
+F:\Git\Home-Automation\GatewayKernel\bin\Debug\Kernel.dll
+F:\Git\Home-Automation\GatewayKernel\bin\Debug\Kernel.pdb
