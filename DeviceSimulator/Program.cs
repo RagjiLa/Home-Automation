@@ -17,7 +17,7 @@ namespace DeviceSimulator
 
             using (var device = new TcpClient())
             {
-                device.Connect(new IPEndPoint(IPAddress.Parse("192.168.1.12"), 900));
+                device.Connect(new IPEndPoint(IPAddress.Parse("192.168.1.5"), 900));
                 Console.WriteLine("Connected to hub");
                 var data = new Dictionary<string, string>();
                 data.Add("W", "5");
