@@ -10,11 +10,14 @@ namespace Hub.Utilities
 
         public void Enqueue(T obj)
         {
-            q.Enqueue(obj);
             lock (this)
             {
+                q.Enqueue(obj);
                 T overflow;
-                while (q.Count > Limit && q.TryDequeue(out overflow)) ;
+                while (q.Count > Limit && q.TryDequeue(out overflow))
+                {
+                    //Keep on doing deque.
+                }
             }
         }
     }

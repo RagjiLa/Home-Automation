@@ -3,22 +3,21 @@ using Hub.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Net;
 
 namespace HubPlugins
 {
     public class PlantMangerPlugin : IMultiSessionPlugin
     {
-        private CacheService<float> _variableRam = null;
-        private uint _defaultdrytime = 360;
-        private byte _defaultWateringTime = 5;
-        private PlantDataSample _parsedData = null;
+        private readonly CacheService<float> _variableRam ;
+        private readonly uint _defaultdrytime;
+        private readonly byte _defaultWateringTime;
+        private PlantDataSample _parsedData;
 
         public ISample AssociatedSample
         {
             get
             {
-                return new PlantDataSample(); 
+                return new PlantDataSample();
             }
         }
 
@@ -30,21 +29,19 @@ namespace HubPlugins
             }
         }
 
-        public PlantMangerPlugin(uint dryTime, byte wateringTimeInSeconds, CacheService<float> cache)
+        public PlantMangerPlugin(uint dryTime, byte wateringTimeInSeconds, CacheService<float> cacheService)
         {
-            if (dryTime == 0) throw new ArgumentNullException("dryTime cannot be zero");
-            if (wateringTimeInSeconds == 0) throw new ArgumentNullException("wateringTimeInSeconds cannot be zero");
+            if (dryTime == 0) throw new ArgumentNullException("dryTime");
+            if (wateringTimeInSeconds == 0) throw new ArgumentNullException("wateringTimeInSeconds");
             _defaultdrytime = dryTime;
             _defaultWateringTime = wateringTimeInSeconds;
+            _variableRam = cacheService;
         }
 
         public IEnumerable<byte> Respond(ISample sample)
         {
-            //Run Algo
-            //Answer to water or not in seconds to keep the pump on
-
             _parsedData = sample as PlantDataSample;
-            return new byte[] { WateringAlgo(_parsedData) };
+            return new [] { WateringAlgo(_parsedData) };
         }
 
         private byte WateringAlgo(PlantDataSample parsedData)
@@ -53,7 +50,8 @@ namespace HubPlugins
             string dryCounterName = parsedData.Id + "dryCounter";
             var dryCounter = _variableRam.GetValue(dryCounterName);
             dryCounter--;
-            if (dryCounter == 0)
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (dryCounter == 0.0f)
             {
                 dryCounter = _defaultdrytime;
                 returnValue = _defaultWateringTime;
@@ -79,23 +77,23 @@ namespace HubPlugins
         public float SoilMoisture { get; private set; }
         public float SoilTemperature { get; private set; }
         public bool IsWaterAvailable { get; private set; }
-        public DateTime TimestampUTC { get; private set; }
+        public DateTime TimestampUtc { get; private set; }
         public string Id { get; private set; }
 
         public static bool TryParse(IEnumerable<byte> rawData, out PlantDataSample sample)
         {
-            IDictionary<string, string> parsedData = null;
-            var result = DataParser.TryParse(rawData, out parsedData);
-            if (result == null)
+            try
             {
+                var parsedData = DataParser.ToKeyValuePairs(rawData);
+
                 sample = new PlantDataSample();
                 sample.FromKeyValuePair(parsedData);
                 return true;
             }
-            else
+            catch (Exception ex)
             {
                 sample = null;
-                Logger.Error(new Exception("PlantDataSample", result));
+                Logger.Error(new Exception("PlantDataSample", ex));
                 return false;
             }
         }
@@ -107,7 +105,7 @@ namespace HubPlugins
             kvpData.Add("M", SoilMoisture.ToString(CultureInfo.InvariantCulture));
             kvpData.Add("W", IsWaterAvailable.ToString(CultureInfo.InvariantCulture));
             kvpData.Add("I", Id);
-            kvpData.Add("Ts", TimestampUTC.ToBinary().ToString(CultureInfo.InvariantCulture));
+            kvpData.Add("Ts", TimestampUtc.ToBinary().ToString(CultureInfo.InvariantCulture));
             return kvpData;
         }
 
@@ -120,11 +118,11 @@ namespace HubPlugins
             if (kvpData.ContainsKey("Ts"))
             {
                 var longDt = long.Parse(kvpData["Ts"], CultureInfo.InvariantCulture);
-                TimestampUTC = DateTime.FromBinary(longDt);
+                TimestampUtc = DateTime.FromBinary(longDt);
             }
             else
             {
-                TimestampUTC = DateTime.UtcNow;
+                TimestampUtc = DateTime.UtcNow;
             }
         }
     }

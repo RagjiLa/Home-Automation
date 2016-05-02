@@ -44,7 +44,7 @@
     <Compile Include="ISample.cs" />
     <Compile Include="PluginName.cs" />
     <Compile Include="Utilities\CacheService.cs" />
-    <Compile Include="Utilities\DataParser.cs" />
+    <Compile Include="DataParser.cs" />
     <Compile Include="IMultiSessionPlugin.cs" />
     <Compile Include="SessionExecutor.cs" />
     <Compile Include="ISingleSessionPlugin.cs" />

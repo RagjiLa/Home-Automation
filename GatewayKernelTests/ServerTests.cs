@@ -22,7 +22,6 @@ namespace HubTests
             var creator = new Mock<IObjectCreator>();
             var task = new Mock<ITask>();
             var endpoint = new IPEndPoint(IPAddress.Any, 9000);
-            var emptyPlugins = new List<ISingleSessionPlugin>();
 
             creator.Setup(c => c.GetTask()).Returns(task.Object);
             using (var target = new Server(creator.Object))
@@ -75,8 +74,8 @@ namespace HubTests
                 tcplistner.Verify(t => t.Stop(), Times.Once);
             }
 
-            mockPlugin.Verify(p => p.PostResponseProcess(It.IsAny<IEnumerable<byte>>(), It.IsAny<IEnumerable<byte>>(), It.IsAny<MessageBus>()), Times.Never);
-            mockPlugin.Verify(p => p.Respond(It.IsAny<IEnumerable<byte>>()), Times.Never);
+            mockPlugin.Verify(p => p.PostResponseProcess(It.IsAny<ISample>(), It.IsAny<IEnumerable<byte>>(), It.IsAny<MessageBus>()), Times.Never);
+            mockPlugin.Verify(p => p.Respond(It.IsAny<ISample>()), Times.Never);
         }
 
         [TestMethod]
@@ -94,12 +93,17 @@ namespace HubTests
             var mockPacket = new MemoryStream(1024);
             var packetWritter = new BinaryWriter(mockPacket);
             var responsePacket = new byte[] { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
-            var headerBytes = Encoding.UTF8.GetBytes(PluginName.PlantManagerPlugin.ToString());
-            var dataBytes = Encoding.UTF8.GetBytes("This is a test.");
+            var headerBytes = PluginName.DweetPlugin.ToBytes();
+            var testsample = new TestSample();
+            var kvp = new Dictionary<string, string>();
+            kvp.Add("T", "Tag");
+            kvp.Add("D", "{\"f\":\"ggg\"}");
+            var dataBytes = DataParser.FromKeyValuePairs(kvp).ToArray();
+            mockPlugin.SetupGet(p => p.AssociatedSample).Returns(testsample);
 
             using (var target = new Server(creator.Object))
             {
-                mockPlugin.Setup(p => p.Respond(It.Is<IEnumerable<byte>>(request => AreSame(dataBytes, request)))).Returns(responsePacket).Verifiable();
+                mockPlugin.Setup(p => p.Respond(It.Is<ISample>(sample => AreSame(dataBytes, sample.ToByteArray())))).Returns(responsePacket).Verifiable();
                 task.Setup(t => t.Run(It.IsAny<Action>(), It.IsAny<string>())).Callback<Action, string>((a, s) => a());
                 creator.Setup(c => c.GetTask()).Returns(task.Object);
                 tcplistner.Setup(t => t.AcceptSocket(It.IsAny<CancellationToken>())).Returns<CancellationToken>(
@@ -111,7 +115,7 @@ namespace HubTests
                         connectionLoopCounter++;
                         return clientSocket.Object;
                     });
-                mockPlugin.SetupGet(p => p.Name).Returns(PluginName.PlantManagerPlugin);
+                mockPlugin.SetupGet(p => p.Name).Returns(PluginName.DweetPlugin);
                 plugins.Add(mockPlugin.Object);
                 creator.Setup(c => c.GetTcpListner(It.Is<IPEndPoint>(e => e.Equals(endpoint)))).Returns(tcplistner.Object);
                 clientSocket.SetupGet(c => c.RemoteEndPoint).Returns(endpoint);
@@ -134,7 +138,7 @@ namespace HubTests
                 tcplistner.Verify(t => t.Stop(), Times.Once);
             }
 
-            mockPlugin.Verify(p => p.PostResponseProcess(It.Is<IEnumerable<byte>>(request => AreSame(dataBytes, request)), It.Is<IEnumerable<byte>>(response => AreSame(responsePacket, response)), It.IsAny<MessageBus>()), Times.Once);
+            mockPlugin.Verify(p => p.PostResponseProcess(It.Is<ISample>(sample => AreSame(dataBytes, sample.ToByteArray())), It.Is<IEnumerable<byte>>(response => AreSame(responsePacket, response)), It.IsAny<MessageBus>()), Times.Once);
             mockPlugin.VerifyAll();
         }
 
@@ -154,11 +158,16 @@ namespace HubTests
             var packetWritter = new BinaryWriter(mockPacket);
             var responsePacket = new byte[] { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
             var headerBytes = Encoding.UTF8.GetBytes(PluginName.PlantManagerPlugin.ToString());
-            var dataBytes = Encoding.UTF8.GetBytes("This is a test.");
+            var testsample = new TestSample();
+            var kvp = new Dictionary<string, string>();
+            kvp.Add("T", "Tag");
+            kvp.Add("D", "{\"f\":\"ggg\"}");
+            var dataBytes = DataParser.FromKeyValuePairs(kvp).ToArray();
+            mockPlugin.SetupGet(p => p.AssociatedSample).Returns(testsample);
 
             using (var target = new Server(creator.Object))
             {
-                mockPlugin.Setup(p => p.Respond(It.Is<IEnumerable<byte>>(request => AreSame(dataBytes, request)))).Returns(responsePacket).Verifiable();
+                mockPlugin.Setup(p => p.Respond(It.Is<ISample>(sample => AreSame(dataBytes, sample.ToByteArray())))).Returns(responsePacket).Verifiable();
                 task.Setup(t => t.Run(It.IsAny<Action>(), It.IsAny<string>())).Callback<Action, string>((a, s) => a());
                 creator.Setup(c => c.GetTask()).Returns(task.Object);
                 tcplistner.Setup(t => t.AcceptSocket(It.IsAny<CancellationToken>())).Returns<CancellationToken>(
@@ -193,11 +202,11 @@ namespace HubTests
                 tcplistner.Verify(t => t.Stop(), Times.Once);
             }
 
-            mockPlugin.Verify(p => p.PostResponseProcess(It.IsAny<IEnumerable<byte>>(), It.IsAny<IEnumerable<byte>>(), It.IsAny<MessageBus>()), Times.Never);
+            mockPlugin.Verify(p => p.PostResponseProcess(It.IsAny<ISample>(), It.IsAny<IEnumerable<byte>>(), It.IsAny<MessageBus>()), Times.Never);
             mockPlugin.VerifyAll();
         }
 
-        private bool AreSame(IEnumerable<byte> expected, IEnumerable<byte> actual)
+        public static bool AreSame(IEnumerable<byte> expected, IEnumerable<byte> actual)
         {
             var expectedlst = expected.ToList();
             var actuallst = actual.ToList();
@@ -228,6 +237,21 @@ namespace HubTests
             packetLen += 4;
             packetLen += 4;
             packetWritter.Write(packetLen); //CRC
+        }
+    }
+
+    public class TestSample : ISample
+    {
+        private IDictionary<string, string> _cache;
+
+        public IDictionary<string, string> ToKeyValuePair()
+        {
+            return _cache;
+        }
+
+        public void FromKeyValuePair(IDictionary<string, string> kvpData)
+        {
+            _cache = kvpData;
         }
     }
 }

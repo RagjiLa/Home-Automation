@@ -1,9 +1,5 @@
-﻿using Hub.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Hub
 {
@@ -16,21 +12,12 @@ namespace Hub
     {
         public static IEnumerable<byte> ToByteArray(this ISample sample)
         {
-            IEnumerable<byte> byteArraydata;
-
-            var exception = DataParser.TryConvert(sample.ToKeyValuePair(), out byteArraydata);
-            if (exception != null) throw exception;
-
-            return byteArraydata;
+            return DataParser.FromKeyValuePairs(sample.ToKeyValuePair());
         }
 
         public static void FromByteArray(this ISample sample, IEnumerable<byte> byteData)
         {
-            IDictionary<string, string> kvpData;
-
-            var exception = DataParser.TryParse(byteData, out kvpData);
-            if (exception != null) throw exception;
-
+            var kvpData = DataParser.ToKeyValuePairs(byteData);
             sample.FromKeyValuePair(kvpData);
         }
 

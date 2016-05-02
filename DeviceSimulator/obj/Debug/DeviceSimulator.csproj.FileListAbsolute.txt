@@ -4,3 +4,9 @@ F:\Git\Home-Automation\DeviceSimulator\bin\Debug\DeviceSimulator.pdb
 F:\Git\Home-Automation\DeviceSimulator\obj\Debug\DeviceSimulator.csprojResolveAssemblyReference.cache
 F:\Git\Home-Automation\DeviceSimulator\obj\Debug\DeviceSimulator.exe
 F:\Git\Home-Automation\DeviceSimulator\obj\Debug\DeviceSimulator.pdb
+E:\Git\RagjiLa\Home-Automation\DeviceSimulator\bin\Debug\DeviceSimulator.exe.config
+E:\Git\RagjiLa\Home-Automation\DeviceSimulator\bin\Debug\DeviceSimulator.exe
+E:\Git\RagjiLa\Home-Automation\DeviceSimulator\bin\Debug\DeviceSimulator.pdb
+E:\Git\RagjiLa\Home-Automation\DeviceSimulator\obj\Debug\DeviceSimulator.csprojResolveAssemblyReference.cache
+E:\Git\RagjiLa\Home-Automation\DeviceSimulator\obj\Debug\DeviceSimulator.exe
+E:\Git\RagjiLa\Home-Automation\DeviceSimulator\obj\Debug\DeviceSimulator.pdb

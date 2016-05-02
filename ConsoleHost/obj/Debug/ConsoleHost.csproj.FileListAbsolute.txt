@@ -14,3 +14,13 @@ F:\Git\Home-Automation\ConsoleHost\bin\Debug\Hub.dll
 F:\Git\Home-Automation\ConsoleHost\bin\Debug\HubPlugins.dll
 F:\Git\Home-Automation\ConsoleHost\bin\Debug\Hub.pdb
 F:\Git\Home-Automation\ConsoleHost\bin\Debug\HubPlugins.pdb
+E:\Git\RagjiLa\Home-Automation\ConsoleHost\bin\Debug\ConsoleApplication1.exe.config
+E:\Git\RagjiLa\Home-Automation\ConsoleHost\obj\Debug\ConsoleApplication1.exe
+E:\Git\RagjiLa\Home-Automation\ConsoleHost\obj\Debug\ConsoleApplication1.pdb
+E:\Git\RagjiLa\Home-Automation\ConsoleHost\bin\Debug\ConsoleApplication1.exe
+E:\Git\RagjiLa\Home-Automation\ConsoleHost\bin\Debug\ConsoleApplication1.pdb
+E:\Git\RagjiLa\Home-Automation\ConsoleHost\bin\Debug\Hub.dll
+E:\Git\RagjiLa\Home-Automation\ConsoleHost\bin\Debug\HubPlugins.dll
+E:\Git\RagjiLa\Home-Automation\ConsoleHost\bin\Debug\Hub.pdb
+E:\Git\RagjiLa\Home-Automation\ConsoleHost\bin\Debug\HubPlugins.pdb
+E:\Git\RagjiLa\Home-Automation\ConsoleHost\obj\Debug\ConsoleHost.csprojResolveAssemblyReference.cache

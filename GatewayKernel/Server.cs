@@ -14,7 +14,7 @@ namespace Hub
     {
         private Dictionary<string, SessionExecutor> _responders = new Dictionary<string, SessionExecutor>();
         private CancellationTokenSource _tokenSource = new CancellationTokenSource();
-        private ManualResetEvent _IsDispatchingActive = new ManualResetEvent(true);
+        private ManualResetEvent _isDispatchingActive = new ManualResetEvent(true);
         private readonly IObjectCreator _creator;
         private const byte Sop = 0xFF;
 
@@ -25,9 +25,9 @@ namespace Hub
 
         public void StartDispatching(IPEndPoint listeningEndpoint, IEnumerable<ISingleSessionPlugin> plugins)
         {
-            if (_IsDispatchingActive.WaitOne(1))
+            if (_isDispatchingActive.WaitOne(1))
             {
-                _IsDispatchingActive.Reset();
+                _isDispatchingActive.Reset();
                 var threadSafePlugins = plugins.Select(p => new SessionExecutor(p));
                 _responders = threadSafePlugins.ToDictionary(k => k.Name.ToString());
                 _creator.GetTask().Run(() => ListeningLoop(listeningEndpoint), "Listening Loop");
@@ -149,8 +149,10 @@ namespace Hub
             }
         }
 
+        // ReSharper disable once UnusedParameter.Local
         private static bool IsCrcValid(byte[] databuff, byte[] crc, int length)
         {
+            //TODO:Implement CRC
             using (var reader = new BinaryReader(new MemoryStream(crc), Encoding.UTF8, true))
             {
                 return length == reader.ReadUInt32();
@@ -173,12 +175,12 @@ namespace Hub
             if (managedResourceCleanUp)
             {
                 // free managed resources
-                if (_IsDispatchingActive != null)
+                if (_isDispatchingActive != null)
                 {
-                    _IsDispatchingActive.Set();
-                    _IsDispatchingActive.Close();
-                    _IsDispatchingActive.Dispose();
-                    _IsDispatchingActive = null;
+                    _isDispatchingActive.Set();
+                    _isDispatchingActive.Close();
+                    _isDispatchingActive.Dispose();
+                    _isDispatchingActive = null;
                 }
                 if (_tokenSource != null)
                 {

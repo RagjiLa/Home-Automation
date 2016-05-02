@@ -1,13 +1,8 @@
 ﻿using Hub;
-using Hub.Utilities;
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace HubPlugins
 {
@@ -17,7 +12,7 @@ namespace HubPlugins
         {
             get
             {
-                return new DweetSample(); ;
+                return new DweetSample();
             }
         }
 
@@ -39,9 +34,10 @@ namespace HubPlugins
             using (var client = new HttpClient())
             {
                 var sample = requestSample as DweetSample;
+                // ReSharper disable once PossibleNullReferenceException
                 StringContent content = new StringContent(sample.Data, Encoding.UTF8, "application/json");
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                var response = client.PostAsync("http://dweet.io/dweet/for/" + sample.Tag, content).Result;
+                client.PostAsync("http://dweet.io/dweet/for/" + sample.Tag, content).RunSynchronously();
             }
         }
 
