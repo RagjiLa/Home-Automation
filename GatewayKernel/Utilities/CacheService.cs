@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Hub.Utilities
 {
     public class CacheService<T>
     {
-        private Dictionary<string, T> _internalCache;
-        private Object _syncLock = new object();
+        private readonly Dictionary<string, T> _internalCache;
+        private readonly Object _syncLock = new object();
 
         public CacheService()
         {

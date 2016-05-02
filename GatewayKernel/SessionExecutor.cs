@@ -1,5 +1,4 @@
-﻿using Hub.Utilities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -8,9 +7,9 @@ namespace Hub
     public class SessionExecutor : ISingleSessionPlugin, IDisposable
     {
         private ISingleSessionPlugin _plugin;
-        private object _singleThreadSync = new object();
-        private bool _disposed = false;
-        Mutex _sessionSync = new Mutex();
+        private readonly object _singleThreadSync = new object();
+        private bool _disposed;
+        readonly Mutex _sessionSync = new Mutex();
 
         public PluginName Name
         {
@@ -76,9 +75,10 @@ namespace Hub
 
         public SessionExecutor CreateNewSession()
         {
-            if (!CanHaveMultipleSessions) throw new InvalidOperationException("Plugin doesnot support multiple sessions.");
             lock (_singleThreadSync)
             {
+                if (!CanHaveMultipleSessions) throw new InvalidOperationException("Plugin doesnot support multiple sessions.");
+                // ReSharper disable once PossibleNullReferenceException
                 return new SessionExecutor((_plugin as IMultiSessionPlugin).Clone());
             }
         }

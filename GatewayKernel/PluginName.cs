@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 namespace Hub
 {
@@ -10,9 +9,9 @@ namespace Hub
 
         private readonly string _name;
 
-        private PluginName(string Name)
+        private PluginName(string name)
         {
-            _name = Name;
+            _name = name;
         }
 
         public override string ToString()
@@ -22,7 +21,7 @@ namespace Hub
 
         public byte[] ToBytes()
         {
-            return Encoding.UTF8.GetBytes(this.ToString());
+            return Encoding.UTF8.GetBytes(ToString());
         }
     }
 }

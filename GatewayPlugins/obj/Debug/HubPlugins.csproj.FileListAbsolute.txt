@@ -5,3 +5,10 @@ F:\Git\Home-Automation\GatewayPlugins\bin\Debug\Hub.pdb
 F:\Git\Home-Automation\GatewayPlugins\obj\Debug\HubPlugins.csprojResolveAssemblyReference.cache
 F:\Git\Home-Automation\GatewayPlugins\obj\Debug\HubPlugins.dll
 F:\Git\Home-Automation\GatewayPlugins\obj\Debug\HubPlugins.pdb
+E:\Git\RagjiLa\Home-Automation\GatewayPlugins\bin\Debug\HubPlugins.dll
+E:\Git\RagjiLa\Home-Automation\GatewayPlugins\bin\Debug\HubPlugins.pdb
+E:\Git\RagjiLa\Home-Automation\GatewayPlugins\bin\Debug\Hub.dll
+E:\Git\RagjiLa\Home-Automation\GatewayPlugins\bin\Debug\Hub.pdb
+E:\Git\RagjiLa\Home-Automation\GatewayPlugins\obj\Debug\HubPlugins.csprojResolveAssemblyReference.cache
+E:\Git\RagjiLa\Home-Automation\GatewayPlugins\obj\Debug\HubPlugins.dll
+E:\Git\RagjiLa\Home-Automation\GatewayPlugins\obj\Debug\HubPlugins.pdb
