@@ -43,7 +43,7 @@
   <ItemGroup>
     <Compile Include="CacheService.cs" />
     <Compile Include="DataParser.cs" />
-    <Compile Include="FiniteQue.cs" />
+    <Compile Include="FiniteBufferQue.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="PluginName.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

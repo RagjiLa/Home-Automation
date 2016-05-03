@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net.Sockets;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using Hub;
+﻿using Hub;
 using Hub.TestingClasses;
 using HubPlugins;
 using Kernel;
+using System;
+using System.Collections.Generic;
+using System.Net;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
 namespace ConsoleApplication1
 {
@@ -22,9 +17,11 @@ namespace ConsoleApplication1
             Console.Title = "Hub Host";
             CacheService<float> floatcs = new CacheService<float>();
             Server s = new Server(new ObjectCreator());
-            DweetPlugin dp = new DweetPlugin();
-            PlantMangerPlugin pm = new PlantMangerPlugin(360, 10, floatcs);
-            s.StartDispatching(new IPEndPoint(GetLocalIPAddress(), 900), new List<ISingleSessionPlugin>() { dp, pm });
+            var bufferCache = new Dictionary<string, FiniteBufferQue<SqlData>>();
+            DweetPlugin dpPlugin = new DweetPlugin();
+            SqLitePlugin sqlPlugin = new SqLitePlugin(bufferCache, 0);
+            PlantMangerPlugin pmPlugin = new PlantMangerPlugin(360, 10, floatcs);
+            s.StartDispatching(new IPEndPoint(GetLocalIpAddress(), 900), new List<ISingleSessionPlugin>{ dpPlugin, pmPlugin, sqlPlugin });
             Logger.Logged += Logger_Logged;
             Console.ReadLine();
         }
@@ -34,7 +31,7 @@ namespace ConsoleApplication1
             Console.WriteLine(e.Message);
         }
 
-        public static IPAddress GetLocalIPAddress()
+        public static IPAddress GetLocalIpAddress()
         {
             if (NetworkInterface.GetIsNetworkAvailable())
             {

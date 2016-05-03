@@ -19,56 +19,48 @@ namespace DeviceSimulator
 
             using (var device = new TcpClient())
             {
-                device.Connect(new IPEndPoint(GetLocalIPAddress(), 900));
+                device.Connect(new IPEndPoint(GetLocalIpAddress(), 900));
                 Console.WriteLine("Connected to hub");
-                var jsongData = new Dictionary<string, string>();
-                jsongData.Add("W", "8");
-                var jsonString = ToJsonString(jsongData);
-                var pluginData = new Dictionary<string, string>();
-                pluginData.Add("T", "TagLaukik");
-                pluginData.Add("D", jsonString);
-                var packet = DataParser.GeneratePacket(PluginName.DweetPlugin, pluginData).ToList();
+                var dataToSend = new List<byte>(SqlPluginTest());
                 using (var tcpStream = device.GetStream())
                 {
-                    tcpStream.Write(packet.ToArray(), 0, packet.Count);
-                    Console.Write("Sent ");
+                    tcpStream.Write(dataToSend.ToArray(), 0, dataToSend.Count);
+                    Console.Write("Sent " + dataToSend.Count + " bytes");
                     var responseRaw = new byte[1024];
-                    tcpStream.Read(responseRaw, 0, 1024);
-                    Console.WriteLine(Encoding.UTF8.GetString(responseRaw));
+                    Console.WriteLine(tcpStream.Read(responseRaw, 0, 1024) > 0
+                        ? Encoding.UTF8.GetString(responseRaw)
+                        : "Received 0 bytes; No Response");
                 }
             }
 
             Console.ReadLine();
         }
 
-        public static IEnumerable<byte> GeneratePacket(byte[] headerBytes, byte[] dataBytes)
+        private static IEnumerable<byte> DweetPluginTest()
         {
-            if (headerBytes.Length + dataBytes.Length > 1002) throw new InvalidDataException("Header and data should not exceed 1002 bytes");
-            using (var msData = new MemoryStream())
-            {
-                using (var packetWritter = new BinaryWriter(msData, Encoding.UTF8, false))
-                {
-                    uint packetLen = 0;
-                    packetWritter.Write((byte)0xFF); //SOP
-                    packetLen += 1;
-                    packetWritter.Write((UInt32)headerBytes.Length); //Header Length
-                    packetLen += 4;
-                    packetWritter.Write(headerBytes); //Header
-                    packetLen += (uint)headerBytes.Length;
-                    packetWritter.Write((UInt32)dataBytes.Length); //DATA Length
-                    packetLen += 4;
-                    packetWritter.Write(dataBytes); //DATA
-                    packetLen += (uint)dataBytes.Length;
-                    packetWritter.Write((UInt32)4); //CRC Length
-                    packetLen += 4;
-                    packetLen += 4;
-                    packetWritter.Write(packetLen); //CRC
-                }
-                return msData.ToArray();
-            }
+            var jsongData = new Dictionary<string, string>();
+            jsongData.Add("W", "8");
+            var jsonString = ToJsonString(jsongData);
+            var pluginData = new Dictionary<string, string>();
+            pluginData.Add("T", "TagLaukik");
+            pluginData.Add("D", jsonString);
+            return DataParser.GeneratePacket(PluginName.DweetPlugin, pluginData).ToList();
         }
 
-        public static string ToJsonString(IDictionary<string, string> data)
+        private static IEnumerable<byte> SqlPluginTest()
+        {
+            var dataForSql = new Dictionary<string, string>();
+            dataForSql.Add("D", @"E:\Katic\Data.db3");
+            dataForSql.Add("T", @"TimeSeries");
+            dataForSql.Add("S", @"32.5");
+            dataForSql.Add("X", @"6.5");
+            dataForSql.Add("g", @"285.0");
+            return DataParser.GeneratePacket(PluginName.SqLitePlugin, dataForSql).ToList();
+        }
+
+
+
+        private static string ToJsonString(IDictionary<string, string> data)
         {
             StringBuilder jsonString = new StringBuilder();
             jsonString.Append("{");
@@ -88,7 +80,7 @@ namespace DeviceSimulator
             return jsonString.ToString();
         }
 
-        public static IPAddress GetLocalIPAddress()
+        private static IPAddress GetLocalIpAddress()
         {
             if (NetworkInterface.GetIsNetworkAvailable())
             {
