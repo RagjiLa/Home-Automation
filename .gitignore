@@ -1,7 +1,3 @@
-*\Debug\*.exe
-*\Debug\*.dll
-*\Debug\*.pdb
-*\Release\*.exe
-*\Release\*.dll
-*\Release\*.pdb
+*\bin
+*\obj
 *\TestResults
