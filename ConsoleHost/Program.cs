@@ -19,9 +19,9 @@ namespace ConsoleApplication1
             Server s = new Server(new ObjectCreator());
             var bufferCache = new Dictionary<string, FiniteBufferQue<SqlData>>();
             DweetPlugin dpPlugin = new DweetPlugin();
-            SqLitePlugin sqlPlugin = new SqLitePlugin(bufferCache, 0);
+            SqLitePlugin sqlPlugin = new SqLitePlugin(Environment.CurrentDirectory + @"\Data.db3", bufferCache, 0);
             PlantMangerPlugin pmPlugin = new PlantMangerPlugin(360, 10, floatcs);
-            s.StartDispatching(new IPEndPoint(GetLocalIpAddress(), 900), new List<ISingleSessionPlugin>{ dpPlugin, pmPlugin, sqlPlugin });
+            s.StartDispatching(new IPEndPoint(GetLocalIpAddress(), 900), new List<ISingleSessionPlugin> { dpPlugin, pmPlugin, sqlPlugin });
             Logger.Logged += Logger_Logged;
             Console.ReadLine();
         }

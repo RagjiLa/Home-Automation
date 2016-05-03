@@ -70,6 +70,11 @@ namespace HubPlugins
             var sample = new DweetSample(_parsedData.Id, _parsedData.ToJsonString());
             communicationBus.Invoke(PluginName.DweetPlugin, sample);
         }
+
+        public void ShutDown()
+        {
+           
+        }
     }
 
     public class PlantDataSample : ISample

@@ -9,6 +9,7 @@ namespace Hub
         ISample AssociatedSample { get; }
         IEnumerable<byte> Respond(ISample sample);
         void PostResponseProcess(ISample requestSample, IEnumerable<byte> responseData, MessageBus communicationBus);
+        void ShutDown();
     }
 
 }

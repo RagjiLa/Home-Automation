@@ -51,12 +51,14 @@ namespace Hub
                 }
                 else
                 {
-                    if (!_disposed) goto Wait;
+                    if (!_disposed)
+                        goto Wait;
                 }
             }
             finally
             {
-                if (!_disposed) _sessionSync.ReleaseMutex();
+                if (!_disposed)
+                    _sessionSync.ReleaseMutex();
             }
         }
 
@@ -69,7 +71,8 @@ namespace Hub
             }
             else
             {
-                if (!_disposed) goto Wait;
+                if (!_disposed)
+                    goto Wait;
             }
             return null;
         }
@@ -101,6 +104,11 @@ namespace Hub
             }
 
             // free native resources if there are any.
+        }
+
+        public void ShutDown()
+        {
+            _plugin.ShutDown();
         }
     }
 }

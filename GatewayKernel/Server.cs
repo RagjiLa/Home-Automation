@@ -61,7 +61,11 @@ namespace Hub
                 _tokenSource.Dispose();
                 _tokenSource = null;
                 coreSocket.Stop();
-                foreach (var handler in _responders) handler.Value.Dispose();
+                foreach (var handler in _responders)
+                {
+                    handler.Value.ShutDown();
+                    handler.Value.Dispose();
+                }
                 _responders.Clear();
             }
         }

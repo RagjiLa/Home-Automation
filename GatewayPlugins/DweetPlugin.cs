@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System;
 
 namespace HubPlugins
 {
@@ -45,6 +46,11 @@ namespace HubPlugins
         public IEnumerable<byte> Respond(ISample sample)
         {
             return new byte[0];
+        }
+
+        public void ShutDown()
+        {
+           
         }
     }
 
