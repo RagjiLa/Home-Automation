@@ -33,7 +33,7 @@ namespace ConsoleApplication1
                         Thread.Sleep(1000);
                     }
                 });
-                s.StartDispatching(new IPEndPoint(GetLocalIpAddress(), 900),new List<ISingleSessionPlugin> { dpPlugin, pmPlugin, sqlPlugin });
+                s.StartDispatching(new IPEndPoint(GetLocalIpAddress(), 9000),new List<ISingleSessionPlugin> { dpPlugin, pmPlugin, sqlPlugin });
                 Logger.Logged += Logger_Logged;
 
                 Console.ReadLine();

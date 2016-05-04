@@ -22,7 +22,7 @@ namespace DeviceSimulator
             {
                 using (var device = new TcpClient())
                 {
-                    device.Connect(new IPEndPoint(GetLocalIpAddress(), 900));
+                    device.Connect(new IPEndPoint(GetLocalIpAddress(), 9000));
                     //Console.WriteLine("Connected to hub");
 
                     var dataToSend = new List<byte>(SqlPluginTest(ctr));
