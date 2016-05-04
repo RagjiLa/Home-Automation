@@ -1,4 +1,5 @@
 ﻿using Hub.TestingInterfaces;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -26,8 +27,16 @@ namespace Hub.TestingClasses
         public ISocket AcceptSocket(CancellationToken token)
         {
             var waitHandle = _listner.AcceptSocketAsync();
-            waitHandle.Wait(token);
-            if (waitHandle.IsCanceled)
+            try
+            {
+
+                waitHandle.Wait(token);
+            }
+            catch (OperationCanceledException)
+            {
+                //Cancelled dont do anything
+            }
+            if (token.IsCancellationRequested)
                 return null;
 
             return new AbstractedSocket(waitHandle.Result);

@@ -1,4 +1,5 @@
 ﻿using Kernel;
+using System;
 using System.Collections.Generic;
 
 namespace Hub
@@ -7,8 +8,7 @@ namespace Hub
     {
         PluginName Name { get; }
         ISample AssociatedSample { get; }
-        IEnumerable<byte> Respond(ISample sample);
-        void PostResponseProcess(ISample requestSample, IEnumerable<byte> responseData, MessageBus communicationBus);
+        void Invoke(ISample sample,Action<IEnumerable<byte>> sendResponse,MessageBus interPluginCommunicationBus);
         void ShutDown();
     }
 

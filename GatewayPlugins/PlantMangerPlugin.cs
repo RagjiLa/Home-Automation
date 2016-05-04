@@ -8,7 +8,7 @@ namespace HubPlugins
 {
     public class PlantMangerPlugin : IMultiSessionPlugin
     {
-        private readonly CacheService<float> _variableRam ;
+        private readonly CacheService<float> _variableRam;
         private readonly uint _defaultdrytime;
         private readonly byte _defaultWateringTime;
         private PlantDataSample _parsedData;
@@ -38,10 +38,12 @@ namespace HubPlugins
             _variableRam = cacheService;
         }
 
-        public IEnumerable<byte> Respond(ISample sample)
+        public void Invoke(ISample sample, Action<IEnumerable<byte>> sendResponse, MessageBus interPluginCommunicationBus)
         {
             _parsedData = sample as PlantDataSample;
-            return new [] { WateringAlgo(_parsedData) };
+            sendResponse(new[] { WateringAlgo(_parsedData) });
+            var dweetSample = new DweetSample(_parsedData.Id, _parsedData.ToJsonString());
+            interPluginCommunicationBus.Invoke(PluginName.DweetPlugin, responseBytes => { }, dweetSample);
         }
 
         private byte WateringAlgo(PlantDataSample parsedData)
@@ -65,15 +67,9 @@ namespace HubPlugins
             return new PlantMangerPlugin(_defaultdrytime, _defaultWateringTime, _variableRam);
         }
 
-        public void PostResponseProcess(ISample requestSample, IEnumerable<byte> responseData, MessageBus communicationBus)
-        {
-            var sample = new DweetSample(_parsedData.Id, _parsedData.ToJsonString());
-            communicationBus.Invoke(PluginName.DweetPlugin, sample);
-        }
-
         public void ShutDown()
         {
-           
+
         }
     }
 

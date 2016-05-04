@@ -18,7 +18,7 @@ namespace DeviceSimulator
         static void Main(string[] args)
         {
             Console.Title = "Device Simulator";
-            Parallel.For(0, 10, (ctr) =>
+            Parallel.For(0, 500, (ctr) =>
             {
                 using (var device = new TcpClient())
                 {

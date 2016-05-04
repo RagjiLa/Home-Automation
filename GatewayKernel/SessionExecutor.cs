@@ -10,7 +10,7 @@ namespace Hub
         private ISingleSessionPlugin _plugin;
         private readonly object _singleThreadSync = new object();
         private bool _disposed;
-        readonly Mutex _sessionSync = new Mutex();
+        private readonly AutoResetEvent _sessionSync = new AutoResetEvent(true);
 
         public PluginName Name
         {
@@ -41,13 +41,13 @@ namespace Hub
             _plugin = plugin;
         }
 
-        public void PostResponseProcess(ISample requestSample, IEnumerable<byte> responseData, MessageBus communicationBus)
+        public void Invoke(ISample sample, Action<IEnumerable<byte>> sendResponse, MessageBus communicationBus)
         {
             try
             {
             Wait: if (_sessionSync.WaitOne(3))
                 {
-                    if (!_disposed) _plugin.PostResponseProcess(requestSample, responseData, communicationBus);
+                    if (!_disposed) _plugin.Invoke(sample, sendResponse, communicationBus);
                 }
                 else
                 {
@@ -58,23 +58,8 @@ namespace Hub
             finally
             {
                 if (!_disposed)
-                    _sessionSync.ReleaseMutex();
+                    _sessionSync.Set();
             }
-        }
-
-        public IEnumerable<byte> Respond(ISample sample)
-        {
-
-        Wait: if (_sessionSync.WaitOne(3))
-            {
-                if (!_disposed) return _plugin.Respond(sample);
-            }
-            else
-            {
-                if (!_disposed)
-                    goto Wait;
-            }
-            return null;
         }
 
         public SessionExecutor CreateNewSession()

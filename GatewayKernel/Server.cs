@@ -38,6 +38,12 @@ namespace Hub
             }
         }
 
+        public bool StopDispatching(TimeSpan spanTowaitFor)
+        {
+            if (_tokenSource != null) _tokenSource.Cancel();
+            return _isDispatchingActive.WaitOne(spanTowaitFor);
+        }
+
         private void ListeningLoop(IPEndPoint listeningEndpoint)
         {
             var coreSocket = _creator.GetTcpListner(listeningEndpoint);
@@ -49,7 +55,8 @@ namespace Hub
                     var clientSocket = coreSocket.AcceptSocket(_tokenSource.Token);
                     if (clientSocket == null)
                         break;
-                    _creator.GetTask().Run(() => ServeConnection(clientSocket, _responders), clientSocket.RemoteEndPoint.ToString());
+                    _creator.GetTask()
+                        .Run(() => ServeConnection(clientSocket, _responders), clientSocket.RemoteEndPoint.ToString());
                 }
             }
             catch (Exception ex)
@@ -67,6 +74,7 @@ namespace Hub
                     handler.Value.Dispose();
                 }
                 _responders.Clear();
+                _isDispatchingActive.Set();
             }
         }
 
@@ -76,9 +84,6 @@ namespace Hub
             {
                 Dictionary<string, SessionExecutor> respondersThreadSafeCopy = responders;
                 ISocket connectionThreadSafeCopy = connection;
-                SessionExecutor activeHandler = null;
-                List<byte> responseData = null;
-                ISample requestSample = null;
                 using (connectionThreadSafeCopy)
                 {
                     byte[] databuff = new byte[1024];
@@ -107,25 +112,29 @@ namespace Hub
                                                 var requestData = parsedPacket["D"];
                                                 if (respondersThreadSafeCopy.ContainsKey(packetheader))
                                                 {
-                                                    activeHandler = respondersThreadSafeCopy[packetheader];
+                                                    var activeHandler = respondersThreadSafeCopy[packetheader];
                                                     activeHandler = activeHandler.CanHaveMultipleSessions ? activeHandler.CreateNewSession() : activeHandler;
-                                                    requestSample = activeHandler.AssociatedSample;
+                                                    var requestSample = activeHandler.AssociatedSample;
                                                     requestSample.FromByteArray(requestData);
-                                                    var response = activeHandler.Respond(requestSample);
-                                                    if (response != null)
-                                                    {
-                                                        responseData = new List<byte>(response);
-                                                        if (connectionThreadSafeCopy.Send(responseData.ToArray()) != responseData.Count())
+                                                    var messageBus = new MessageBus(respondersThreadSafeCopy, activeHandler.Name);
+                                                    var sendResponse =
+                                                        new Action<IEnumerable<byte>>((response) =>
                                                         {
-                                                            activeHandler = null;
-                                                            Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " Sending data failed");
-                                                        }
-                                                    }
-                                                    else
-                                                    {
-                                                        activeHandler = null;
-                                                        Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " No response was generated from handler or is disposed");
-                                                    }
+                                                            if (response != null)
+                                                            {
+                                                                var responseData = new List<byte>(response);
+                                                                if (connectionThreadSafeCopy.Send(responseData.ToArray()) != responseData.Count())
+                                                                {
+                                                                    Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " Sending data failed");
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " No response was generated from handler or is disposed");
+                                                            }
+
+                                                        });
+                                                    activeHandler.Invoke(requestSample, sendResponse, messageBus);
                                                 }
                                                 else
                                                 {
@@ -163,11 +172,6 @@ namespace Hub
                         Logger.Error(connectionThreadSafeCopy.RemoteEndPoint + " No bytes received (Invalid Packet) ");
                     }
                 }
-                if (activeHandler != null)
-                {
-                    var messageBus = new MessageBus(respondersThreadSafeCopy, activeHandler.Name);
-                    activeHandler.PostResponseProcess(requestSample, responseData, messageBus);
-                }
             }
             catch (Exception ex)
             {
@@ -197,6 +201,8 @@ namespace Hub
             if (managedResourceCleanUp)
             {
                 // free managed resources
+                StopDispatching(TimeSpan.FromSeconds(30));
+
                 if (_isDispatchingActive != null)
                 {
                     _isDispatchingActive.Set();
@@ -206,7 +212,6 @@ namespace Hub
                 }
                 if (_tokenSource != null)
                 {
-                    _tokenSource.Cancel();
                     _tokenSource.Dispose();
                 }
             }

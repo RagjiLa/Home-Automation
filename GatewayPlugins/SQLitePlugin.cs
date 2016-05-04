@@ -11,7 +11,6 @@ namespace HubPlugins
     public class SqLitePlugin : ISingleSessionPlugin
     {
         private readonly Dictionary<string, FiniteBufferQue<SqlData>> _buffers;
-        private readonly object _syncLockForBuffers = new object();
         private readonly int _maxdataToBuffer;
         private readonly string _databasePath;
         public SqLitePlugin(string databaseFullPath, Dictionary<string, FiniteBufferQue<SqlData>> buffers, int maxdataToBuffer)
@@ -31,23 +30,28 @@ namespace HubPlugins
             get { return new SqlData(); }
         }
 
-        public IEnumerable<byte> Respond(ISample sample)
+        public void Invoke(ISample sample, Action<IEnumerable<byte>> sendResponse, MessageBus interPluginCommunicationBus)
         {
+            var response = new byte[0];
             try
             {
                 var requestPacket = sample as SqlData;
                 // ReSharper disable once PossibleNullReferenceException
-                if (!_buffers.ContainsKey(requestPacket.TableName)) _buffers.Add(requestPacket.TableName, new FiniteBufferQue<SqlData>(_maxdataToBuffer));
+                if (!_buffers.ContainsKey(requestPacket.TableName))
+                    _buffers.Add(requestPacket.TableName, new FiniteBufferQue<SqlData>(_maxdataToBuffer));
 
                 if (_buffers[requestPacket.TableName].Enqueue(requestPacket))
                 {
                     PushToDatabase(_databasePath, _buffers[requestPacket.TableName]);
                 }
-                return new byte[0];
             }
             catch (Exception ex)
             {
-                return Encoding.UTF8.GetBytes(ex.ToString());
+                response = Encoding.UTF8.GetBytes(ex.ToString());
+            }
+            finally
+            {
+                sendResponse(response);
             }
         }
 

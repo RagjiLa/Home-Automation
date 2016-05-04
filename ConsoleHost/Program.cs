@@ -4,9 +4,12 @@ using HubPlugins;
 using Kernel;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ConsoleApplication1
 {
@@ -16,14 +19,27 @@ namespace ConsoleApplication1
         {
             Console.Title = "Hub Host";
             CacheService<float> floatcs = new CacheService<float>();
-            Server s = new Server(new ObjectCreator());
-            var bufferCache = new Dictionary<string, FiniteBufferQue<SqlData>>();
-            DweetPlugin dpPlugin = new DweetPlugin();
-            SqLitePlugin sqlPlugin = new SqLitePlugin(Environment.CurrentDirectory + @"\Data.db3", bufferCache, 0);
-            PlantMangerPlugin pmPlugin = new PlantMangerPlugin(360, 10, floatcs);
-            s.StartDispatching(new IPEndPoint(GetLocalIpAddress(), 900), new List<ISingleSessionPlugin> { dpPlugin, pmPlugin, sqlPlugin });
-            Logger.Logged += Logger_Logged;
-            Console.ReadLine();
+            using (Server s = new Server(new ObjectCreator()))
+            {
+                var bufferCache = new Dictionary<string, FiniteBufferQue<SqlData>>();
+                DweetPlugin dpPlugin = new DweetPlugin();
+                SqLitePlugin sqlPlugin = new SqLitePlugin(Environment.CurrentDirectory + @"\Data.db3", bufferCache, 100);
+                PlantMangerPlugin pmPlugin = new PlantMangerPlugin(360, 10, floatcs);
+                Task.Run(() =>
+                {
+                    while (true)
+                    {
+                        Console.Title = "Hub Host" + Process.GetCurrentProcess().Threads.Count;
+                        Thread.Sleep(1000);
+                    }
+                });
+                s.StartDispatching(new IPEndPoint(GetLocalIpAddress(), 900),new List<ISingleSessionPlugin> { dpPlugin, pmPlugin, sqlPlugin });
+                Logger.Logged += Logger_Logged;
+
+                Console.ReadLine();
+                Console.WriteLine("Shutdown sucessfull " + s.StopDispatching(TimeSpan.FromSeconds(10)));
+                Console.ReadLine();
+            }
         }
 
         private static void Logger_Logged(object sender, LoggedArgs e)

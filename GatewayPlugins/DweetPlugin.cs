@@ -31,8 +31,9 @@ namespace HubPlugins
             return new DweetPlugin();
         }
 
-        public void PostResponseProcess(ISample requestSample, IEnumerable<byte> responseData, MessageBus communicationBus)
+        public void Invoke(ISample requestSample, Action<IEnumerable<byte>> sendResponse, MessageBus interPluginCommunicationBus)
         {
+            sendResponse(new byte[0]);
             using (var client = new HttpClient())
             {
                 var sample = requestSample as DweetSample;
@@ -43,14 +44,9 @@ namespace HubPlugins
             }
         }
 
-        public IEnumerable<byte> Respond(ISample sample)
-        {
-            return new byte[0];
-        }
-
         public void ShutDown()
         {
-           
+
         }
     }
 
