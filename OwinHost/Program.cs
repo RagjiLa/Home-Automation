@@ -11,6 +11,10 @@ using System.Web.Http;
 using System.Web.Http.Dispatcher;
 using Microsoft.Owin.Hosting;
 using Owin;
+using System.Web.Script.Serialization;
+using Controllers;
+using System.Data;
+using System.Web.Http.Dependencies;
 
 namespace OwinHost
 {
@@ -20,98 +24,66 @@ namespace OwinHost
         {
             string baseAddress = "http://localhost:9000/";
             AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\Controllers.dll"));
-            // Start OWIN host 
+
             using (WebApp.Start<Startup>(url: baseAddress))
             {
-                // Create HttpCient and make a request to api/values 
-                HttpClient client = new HttpClient();
+                Console.WriteLine("Server Activated @" + baseAddress);
 
-                var response = client.GetAsync(baseAddress + "api/values").Result;
+                #region TimeseriesController
+                using (var client = new HttpClient())
+                {
+                    var data = new Dictionary<string, string>();
+                    data.Add(DateTime.MinValue.ToBinary().ToString(), DateTime.MinValue.ToLongDateString());
+                    data.Add(DateTime.MaxValue.ToBinary().ToString(), DateTime.MaxValue.ToLongDateString());
+                    var jsonDatatoPost = new JavaScriptSerializer().Serialize(data);
+                    StringContent content = new StringContent(jsonDatatoPost, Encoding.UTF8, "application/json");
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    var result = client.PostAsync(baseAddress + "api/TimeSeries", content).Result;
+                    Console.WriteLine(result);
+                }
 
-                Console.WriteLine(response);
-                Console.WriteLine(response.Content.ReadAsStringAsync().Result);
-                Console.ReadLine(); 
+                using (var client = new HttpClient())
+                {
+                    var result = client.GetAsync(baseAddress + "api/TimeSeries/50").Result;
+
+                    var str = result.Content.ReadAsStringAsync().Result;
+                    var t = new JavaScriptSerializer().Deserialize<Dictionary<string, string>>(str);
+                    Console.WriteLine(result);
+
+                }
+
+                //using (var client = new HttpClient())
+                //{
+                //    var result = client.GetAsync(baseAddress + "api/Store/5").Result;
+                //    if (result.IsSuccessStatusCode)
+                //    {
+                //        var str = result.Content.ReadAsStringAsync().Result;
+                //        var t = new JavaScriptSerializer().Deserialize<StoreController.StoreSample.DataTable[]>(str);
+                //        Console.WriteLine(result);
+                //    }
+                //}
+                #endregion StoreController
+
+                #region InternetDashboardController
+
+                using (var client = new HttpClient())
+                {
+                    var jsonDatatoPost = new JavaScriptSerializer().Serialize(new InternetDashboardController.DweetSample() { ResourceName = "Laukik9562", Data = new JavaScriptSerializer().Serialize(new g() { Temperature = 52, Humidity = 52 }) });
+                    StringContent content = new StringContent(jsonDatatoPost, Encoding.UTF8, "application/json");
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    var result = client.PostAsync(baseAddress + "api/InternetDashboard", content).Result;
+                    Console.WriteLine(result);
+                }
+
+                #endregion InternetDashboardController
+
+                Console.WriteLine("Press enter to exit");
+                Console.ReadLine();
             }
-            
-            Console.ReadLine(); 
-        }
-
-        public class MyNewAssembliesResolver : DefaultAssembliesResolver
-        {
-            public virtual ICollection<Assembly> GetAssemblies()
-            {
-
-                ICollection<Assembly> baseAssemblies = base.GetAssemblies();
-                List<Assembly> assemblies = new List<Assembly>(baseAssemblies);
-                var controllersAssembly = Assembly.LoadFrom(Environment.CurrentDirectory);
-                baseAssemblies.Add(controllersAssembly);
-                return baseAssemblies;
-
-            }
+            Console.WriteLine("Stopped press enter to exit application");
+            Console.ReadLine();
         }
     }
-
-    //public class ValuesController : ApiController
-    //{
-    //    // GET api/values 
-    //    public IEnumerable<string> Get()
-    //    {
-    //        return new string[] { "value1", "value2" };
-    //    }
-
-    //    // GET api/values/5 
-    //    public string Get(int id)
-    //    {
-    //        return "value";
-    //    }
-
-    //    // POST api/values 
-    //    public IHttpActionResult Post([FromBody]string value)
-    //    {
-    //        return Ok<string>("Laukik");
-    //    }
-
-    //    // PUT api/values/5 
-    //    public void Put(int id, [FromBody]string value)
-    //    {
-    //    }
-
-    //    // DELETE api/values/5 
-    //    public void Delete(int id)
-    //    {
-    //    }
-    //}
-
-    //public class LaukikController : ApiController
-    //{
-    //    // GET api/values 
-    //    public IEnumerable<string> Get()
-    //    {
-    //        return new string[] { "value1", "value2" };
-    //    }
-
-    //    // GET api/values/5 
-    //    public string Get(int id)
-    //    {
-    //        return "Lauki";
-    //    }
-
-    //    // POST api/values 
-    //    public IHttpActionResult Post([FromBody]string value)
-    //    {
-    //        return Ok<string>("Laukik APIs");
-    //    }
-
-    //    // PUT api/values/5 
-    //    public void Put(int id, [FromBody]string value)
-    //    {
-    //    }
-
-    //    // DELETE api/values/5 
-    //    public void Delete(int id)
-    //    {
-    //    }
-    //}
 
     public class Startup
     {
@@ -121,44 +93,51 @@ namespace OwinHost
         {
             // Configure Web API for self-host. 
             HttpConfiguration config = new HttpConfiguration();
-            config.Routes.MapHttpRoute(
-                name: "DefaultApi",
-                routeTemplate: "api/{controller}/{id}",
-                defaults: new { id = RouteParameter.Optional }
-            );
-            //config.Services.Replace(typeof(IAssembliesResolver), new Program.MyNewAssembliesResolver());
+
+            config.Routes.MapHttpRoute(name: "DefaultApi", routeTemplate: "api/{controller}/");
+            config.Routes.MapHttpRoute(name: "ApiById", routeTemplate: "api/{controller}/{id}",
+            defaults: new { id = RouteParameter.Optional },
+            constraints: new { id = @"^[0-9]+$" }
+        );
+            //config.DependencyResolver = new g();
+            Console.WriteLine(config.VirtualPathRoot);
+            foreach (var s in config.Services.GetApiExplorer().ApiDescriptions)
+            {
+                var apiString = s.HttpMethod.Method + "  " + s.RelativePath;
+                Console.WriteLine(apiString);
+            }
             appBuilder.UseWebApi(config);
         }
     }
 
-    //public class InternetDashboardController : ApiController
-    //{
-    //    public IHttpActionResult Post([FromBody]DweetSample value)
-    //    {
-    //        try
-    //        {
-    //            using (var client = new HttpClient())
-    //            {
-    //                StringContent content = new StringContent(value.Data, Encoding.UTF8, "application/json");
-    //                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-    //                var result = client.PostAsync("http://dweet.io/dweet/for/" + value.ResourceName, content).Result;
-    //                if (result.IsSuccessStatusCode)
-    //                    return Ok();
-    //                return Content(result.StatusCode, result.ReasonPhrase);
+    public class g : IDependencyResolver
+    {
+        public int Temperature { get; set; }
+        public int Humidity { get; set; }
+        public IDependencyScope BeginScope()
+        {
+            return new g();
+        }
 
-    //            }
-    //        }
-    //        catch (Exception ex)
-    //        {
-    //            return InternalServerError(ex);
-    //        }
-    //    }
+        public object GetService(Type serviceType)
+        {
+            var x = new TimeSeriesController();
+            if (x.GetType() == serviceType)
+            {
+                return x;
+            }
+            Console.WriteLine(serviceType);
+            return null;
+        }
 
-    //}
+        public IEnumerable<object> GetServices(Type serviceType)
+        {
+            return new List<object>();
+        }
 
-    //public class DweetSample
-    //{
-    //    public string ResourceName { get; set; }
-    //    public string Data { get; set; }
-    //}
+        public void Dispose()
+        {
+            Console.WriteLine("Disposed");
+        }
+    }
 }

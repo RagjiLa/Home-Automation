@@ -7,7 +7,7 @@ using System.Web.Http;
 
 namespace Controllers
 {
-    public class StoreController : ApiController
+    public class PlantWateringController:ApiController
     {
 
     }

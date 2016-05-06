@@ -46,6 +46,8 @@ namespace Hub
 
         private void ListeningLoop(IPEndPoint listeningEndpoint)
         {
+            HttpListener c = new HttpListener();
+            
             var coreSocket = _creator.GetTcpListner(listeningEndpoint);
             try
             {

@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web.Http;
 
-namespace OwinHost
+namespace Controllers
 {
     public class InternetDashboardController : ApiController
     {
@@ -23,8 +19,8 @@ namespace OwinHost
                     var result = client.PostAsync("http://dweet.io/dweet/for/" + value.ResourceName, content).Result;
                     if (result.IsSuccessStatusCode)
                         return Ok();
-                        return Content(result.StatusCode, result.ReasonPhrase);
 
+                    return Content(result.StatusCode, result.ReasonPhrase);
                 }
             }
             catch (Exception ex)
@@ -33,11 +29,10 @@ namespace OwinHost
             }
         }
 
-    }
-
-    public class DweetSample
-    {
-        public string ResourceName { get; set; }
-        public string Data { get; set; }
+        public class DweetSample
+        {
+            public string ResourceName { get; set; }
+            public string Data { get; set; }
+        }
     }
 }
