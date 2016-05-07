@@ -108,6 +108,13 @@
       <Project>{a42736c2-d97e-4cdd-82f2-2dc564d9e2bf}</Project>
       <Name>Controllers</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DeviceControllers\DeviceControllers.csproj">
+      <Project>{458490bc-23f8-4962-853e-b772840bc68a}</Project>
+      <Name>DeviceControllers</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets')" />

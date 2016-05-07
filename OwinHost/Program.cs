@@ -24,44 +24,28 @@ namespace OwinHost
         {
             string baseAddress = "http://localhost:9000/";
             AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\Controllers.dll"));
+            AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\DeviceControllers.dll"));
 
             using (WebApp.Start<Startup>(url: baseAddress))
             {
                 Console.WriteLine("Server Activated @" + baseAddress);
 
                 #region TimeseriesController
-                using (var client = new HttpClient())
-                {
-                    var data = new Dictionary<string, string>();
-                    data.Add(DateTime.MinValue.ToBinary().ToString(), DateTime.MinValue.ToLongDateString());
-                    data.Add(DateTime.MaxValue.ToBinary().ToString(), DateTime.MaxValue.ToLongDateString());
-                    var jsonDatatoPost = new JavaScriptSerializer().Serialize(data);
-                    StringContent content = new StringContent(jsonDatatoPost, Encoding.UTF8, "application/json");
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    var result = client.PostAsync(baseAddress + "api/TimeSeries", content).Result;
-                    Console.WriteLine(result);
-                }
 
-                using (var client = new HttpClient())
-                {
-                    var result = client.GetAsync(baseAddress + "api/TimeSeries/50").Result;
+                var target = new TimeSeriesController();
+                target.Post(baseAddress + "api/TimeSeries");
 
-                    var str = result.Content.ReadAsStringAsync().Result;
-                    var t = new JavaScriptSerializer().Deserialize<Dictionary<string, string>>(str);
-                    Console.WriteLine(result);
-
-                }
 
                 //using (var client = new HttpClient())
                 //{
-                //    var result = client.GetAsync(baseAddress + "api/Store/5").Result;
-                //    if (result.IsSuccessStatusCode)
-                //    {
-                //        var str = result.Content.ReadAsStringAsync().Result;
-                //        var t = new JavaScriptSerializer().Deserialize<StoreController.StoreSample.DataTable[]>(str);
-                //        Console.WriteLine(result);
-                //    }
+                //    var result = client.GetAsync(baseAddress + "api/TimeSeries/50").Result;
+
+                //    var str = result.Content.ReadAsStringAsync().Result;
+                //    var t = new JavaScriptSerializer().Deserialize<Dictionary<string, string>>(str);
+                //    Console.WriteLine(result);
+
                 //}
+
                 #endregion StoreController
 
                 #region InternetDashboardController
@@ -95,10 +79,10 @@ namespace OwinHost
             HttpConfiguration config = new HttpConfiguration();
 
             config.Routes.MapHttpRoute(name: "DefaultApi", routeTemplate: "api/{controller}/");
-            config.Routes.MapHttpRoute(name: "ApiById", routeTemplate: "api/{controller}/{id}",
-            defaults: new { id = RouteParameter.Optional },
-            constraints: new { id = @"^[0-9]+$" }
-        );
+            //    config.Routes.MapHttpRoute(name: "ApiById", routeTemplate: "api/{controller}/{id}",
+            //    defaults: new { id = RouteParameter.Optional },
+            //    constraints: new { id = @"^[0-9]+$" }
+            //);
             //config.DependencyResolver = new g();
             Console.WriteLine(config.VirtualPathRoot);
             foreach (var s in config.Services.GetApiExplorer().ApiDescriptions)
@@ -138,6 +122,25 @@ namespace OwinHost
         public void Dispose()
         {
             Console.WriteLine("Disposed");
+        }
+    }
+
+    public class TimeSeriesController
+    {
+        public void Post(string url)
+        {
+            using (var client = new HttpClient())
+            {
+                var data = new Dictionary<string, string>();
+                data.Add(DateTime.MinValue.ToBinary().ToString(), DateTime.MinValue.ToLongDateString());
+                data.Add(DateTime.MaxValue.ToBinary().ToString(), DateTime.MaxValue.ToLongDateString());
+                var jsonDatatoPost = new JavaScriptSerializer().Serialize(data);
+                StringContent content = new StringContent(jsonDatatoPost, Encoding.UTF8, "application/json");
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                var result = client.PostAsync(url + "?uniqueName=Laukik", content).Result;
+                if (result.StatusCode != System.Net.HttpStatusCode.OK) throw new Exception("Failed");
+                Console.WriteLine(result);
+            }
         }
     }
 }

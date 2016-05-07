@@ -2,32 +2,28 @@
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Web.Http;
 
 namespace Controllers
 {
     public class TimeSeriesController : ApiController
     {
-        public IHttpActionResult Post([FromBody]Dictionary<string, string> timeseriesData)
+        public IHttpActionResult Post(string uniqueName, [FromBody]Dictionary<string, string> timeseriesData)
         {
             try
             {
-                var f = RequestContext.VirtualPathRoot;
                 if (timeseriesData.Values.Count > 0)
                 {
                     string dataBasePath = Path.Combine(Environment.CurrentDirectory, "Stores");
 
                     dataBasePath = CreateDatabaseIfNotExists(dataBasePath, "TimeseriesStore.db3");
 
-                    var failures = InsertIntoDatabse(dataBasePath, timeseriesData);
+                    var failures = InsertIntoDatabse(dataBasePath, uniqueName, timeseriesData);
                     if (failures.Count > 0)
                     {
                         var str = string.Empty;
-                        foreach (var fail in failures) str += fail.ToString() + ", ";
+                        foreach (var fail in failures) str += fail + ", ";
                         return Content(System.Net.HttpStatusCode.Conflict, "Failed some values already exists in database (" + str + ")");
                     }
                     else
@@ -44,7 +40,7 @@ namespace Controllers
             }
         }
 
-        public IHttpActionResult GetSingle(string timeStamp)
+        public IHttpActionResult GetSingle(string uniqueName, string timeStamp)
         {
             try
             {
@@ -52,7 +48,7 @@ namespace Controllers
 
                 dataBasePath = CreateDatabaseIfNotExists(dataBasePath, "TimeseriesStore.db3");
                 var value = string.Empty;
-                if (QueryTable(dataBasePath, timeStamp, out value))
+                if (QueryTable(dataBasePath, uniqueName, timeStamp, out value))
                     return Ok<string>(value);
                 else
                     return Content(System.Net.HttpStatusCode.NotFound, "Key doesnot exits");
@@ -63,7 +59,7 @@ namespace Controllers
             }
         }
 
-        public IHttpActionResult GetMany(List<string> selectiveTimes)
+        public IHttpActionResult GetMany(string uniqueName, List<string> selectiveTimes)
         {
             try
             {
@@ -72,7 +68,7 @@ namespace Controllers
                     string dataBasePath = Path.Combine(Environment.CurrentDirectory, "Stores");
 
                     dataBasePath = CreateDatabaseIfNotExists(dataBasePath, "TimeseriesStore.db3");
-                    var results = QueryTable(dataBasePath, selectiveTimes);
+                    var results = QueryTable(dataBasePath, uniqueName, selectiveTimes);
                     return Ok<Dictionary<string, string>>(results);
                 }
                 else
@@ -86,7 +82,7 @@ namespace Controllers
             }
         }
 
-        public IHttpActionResult GetRecent(int recentCount)
+        public IHttpActionResult GetRecent(string uniqueName, int recentCount)
         {
             try
             {
@@ -95,7 +91,7 @@ namespace Controllers
                     string dataBasePath = Path.Combine(Environment.CurrentDirectory, "Stores");
 
                     dataBasePath = CreateDatabaseIfNotExists(dataBasePath, "TimeseriesStore.db3");
-                    var results = QueryTable(dataBasePath, recentCount);
+                    var results = QueryTable(dataBasePath, uniqueName, recentCount);
                     return Ok<Dictionary<string, string>>(results);
                 }
                 else
@@ -109,14 +105,14 @@ namespace Controllers
             }
         }
 
-        public IHttpActionResult DeleteByTimestamp(string timestamp)
+        public IHttpActionResult DeleteByTimestamp(string uniqueName, string timestamp)
         {
             try
             {
                 string dataBasePath = Path.Combine(Environment.CurrentDirectory, "Stores");
 
                 dataBasePath = CreateDatabaseIfNotExists(dataBasePath, "TimeseriesStore.db3");
-                DeleteRow(dataBasePath, timestamp);
+                DeleteRow(dataBasePath, uniqueName, timestamp);
                 return Ok();
             }
             catch (Exception ex)
@@ -137,29 +133,29 @@ namespace Controllers
             return databaseFullPath;
         }
 
-        private void CreateTableIfNotEsists(SQLiteConnection sqlConnection)
+        private void CreateTableIfNotEsists(string tableName, SQLiteConnection sqlConnection)
         {
             //Verify Table exists
             using (SQLiteCommand sqlCreateTableCmd = new SQLiteCommand(sqlConnection))
             {
-                sqlCreateTableCmd.CommandText = @"CREATE TABLE IF NOT EXISTS Timeseries ( [ID] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, [Time] TEXT NOT NULL, [Value] NVARCHAR(255), [Flags] INT)";
+                sqlCreateTableCmd.CommandText = @"CREATE TABLE IF NOT EXISTS " + tableName + " ( [ID] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, [Time] TEXT NOT NULL, [Value] NVARCHAR(255), [Flags] INT)";
                 sqlCreateTableCmd.ExecuteNonQuery();
             }
         }
 
-        private List<string> InsertIntoDatabse(string databaseFullPath, Dictionary<string, string> timeseriesData)
+        private List<string> InsertIntoDatabse(string databaseFullPath, string tableName, Dictionary<string, string> timeseriesData)
         {
             var returnResult = new List<string>();
             using (SQLiteConnection sqlConnection = new SQLiteConnection("Data Source=" + databaseFullPath))
             {
                 sqlConnection.Open();
-                CreateTableIfNotEsists(sqlConnection);
+                CreateTableIfNotEsists(tableName, sqlConnection);
                 //Insert Data
                 foreach (var row in timeseriesData)
                 {
-                    if (GetSingle(row.Key).ExecuteAsync(CancellationToken.None).Result.StatusCode != System.Net.HttpStatusCode.NotFound)
+                    if (GetSingle(tableName, row.Key).ExecuteAsync(CancellationToken.None).Result.StatusCode != System.Net.HttpStatusCode.NotFound)
                     {
-                        if (DeleteByTimestamp(row.Key).ExecuteAsync(CancellationToken.None).Result.StatusCode != System.Net.HttpStatusCode.OK)
+                        if (DeleteByTimestamp(tableName, row.Key).ExecuteAsync(CancellationToken.None).Result.StatusCode != System.Net.HttpStatusCode.OK)
                         {
                             returnResult.Add(row.Key);
                             continue;
@@ -183,12 +179,12 @@ namespace Controllers
             return returnResult;
         }
 
-        private bool QueryTable(string databaseFullPath, string queryTime, out string value)
+        private bool QueryTable(string databaseFullPath, string tableName, string queryTime, out string value)
         {
             using (SQLiteConnection sqlConnection = new SQLiteConnection("Data Source=" + databaseFullPath))
             {
                 sqlConnection.Open();
-                CreateTableIfNotEsists(sqlConnection);
+                CreateTableIfNotEsists(tableName, sqlConnection);
                 using (SQLiteCommand sqlQueryTableCmd = new SQLiteCommand(sqlConnection))
                 {
                     sqlQueryTableCmd.CommandText = "select [value] from Timeseries where [FLAGS]==0 and [Time] == @timeLong";
@@ -213,7 +209,7 @@ namespace Controllers
             }
         }
 
-        private Dictionary<string, string> QueryTable(string databaseFullPath, List<string> alltimes)
+        private Dictionary<string, string> QueryTable(string databaseFullPath, string tableName, List<string> alltimes)
         {
             var returnValue = new Dictionary<string, string>();
             var stringValue = string.Empty;
@@ -222,7 +218,7 @@ namespace Controllers
             using (SQLiteConnection sqlConnection = new SQLiteConnection("Data Source=" + databaseFullPath))
             {
                 sqlConnection.Open();
-                CreateTableIfNotEsists(sqlConnection);
+                CreateTableIfNotEsists(tableName, sqlConnection);
                 using (SQLiteCommand sqlQueryTableCmd = new SQLiteCommand(sqlConnection))
                 {
                     sqlQueryTableCmd.CommandText = "select [Time] , [value] from Timeseries where [FLAGS]==0 and [Time] in ( " + stringValue + " )";
@@ -241,13 +237,13 @@ namespace Controllers
             }
         }
 
-        private Dictionary<string, string> QueryTable(string databaseFullPath, int recentCount)
+        private Dictionary<string, string> QueryTable(string databaseFullPath, string tableName, int recentCount)
         {
             var returnValue = new Dictionary<string, string>();
             using (SQLiteConnection sqlConnection = new SQLiteConnection("Data Source=" + databaseFullPath))
             {
                 sqlConnection.Open();
-                CreateTableIfNotEsists(sqlConnection);
+                CreateTableIfNotEsists(tableName, sqlConnection);
                 using (SQLiteCommand sqlQueryTableCmd = new SQLiteCommand(sqlConnection))
                 {
                     sqlQueryTableCmd.CommandText = "select [Time] , [value] from Timeseries where [FLAGS]==0 LIMIT @limit  ";
@@ -269,15 +265,15 @@ namespace Controllers
             }
         }
 
-        private void DeleteRow(string databaseFullPath, string timestamp)
+        private void DeleteRow(string databaseFullPath, string tableName, string timestamp)
         {
             using (SQLiteConnection sqlConnection = new SQLiteConnection("Data Source=" + databaseFullPath))
             {
                 sqlConnection.Open();
-                CreateTableIfNotEsists(sqlConnection);
+                CreateTableIfNotEsists(tableName, sqlConnection);
                 using (SQLiteCommand sqlQueryTableCmd = new SQLiteCommand(sqlConnection))
                 {
-                    sqlQueryTableCmd.CommandText = "Update Timeseries set flags=1 where [Time]==@timeStamp";
+                    sqlQueryTableCmd.CommandText = "Update " + tableName + " set flags=1 where [Time]==@timeStamp";
                     var timeLong = new SQLiteParameter("timeStamp");
                     timeLong.Value = timestamp;
                     sqlQueryTableCmd.Parameters.Add(timeLong);
