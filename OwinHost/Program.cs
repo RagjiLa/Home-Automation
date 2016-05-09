@@ -15,6 +15,9 @@ using System.Web.Script.Serialization;
 using Controllers;
 using System.Data;
 using System.Web.Http.Dependencies;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
 namespace OwinHost
 {
@@ -22,125 +25,197 @@ namespace OwinHost
     {
         static void Main(string[] args)
         {
-            string baseAddress = "http://localhost:9000/";
+            string baseAddress = "http://" + GetLocalIpAddress() + ":9000/";
             AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\Controllers.dll"));
             AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\DeviceControllers.dll"));
 
-            using (WebApp.Start<Startup>(url: baseAddress))
+            Startup.BaseUrl = baseAddress;
+            using (WebApp.Start<Startup>(baseAddress))
             {
                 Console.WriteLine("Server Activated @" + baseAddress);
 
-                #region TimeseriesController
-
-                var target = new TimeSeriesController();
-                target.Post(baseAddress + "api/TimeSeries");
-
-
-                //using (var client = new HttpClient())
+                //using (var target = new KeyValueTests(baseAddress))
                 //{
-                //    var result = client.GetAsync(baseAddress + "api/TimeSeries/50").Result;
+                //    target.DeleteSingle();
 
-                //    var str = result.Content.ReadAsStringAsync().Result;
-                //    var t = new JavaScriptSerializer().Deserialize<Dictionary<string, string>>(str);
-                //    Console.WriteLine(result);
+                //    target.PostSingle();
 
+                //    target.GetSingle();
+
+                //    target.PutSingle();
+
+                //    target.DeleteSingle();
                 //}
 
-                #endregion StoreController
+                //using (var target = new InternetDashboardTests(baseAddress))
+                //{
+                //    target.Post();
+                //}
 
-                #region InternetDashboardController
+                //using (var target = new TimeSeriesTests(baseAddress))
+                //{
+                //    target.PostMany();
 
-                using (var client = new HttpClient())
-                {
-                    var jsonDatatoPost = new JavaScriptSerializer().Serialize(new InternetDashboardController.DweetSample() { ResourceName = "Laukik9562", Data = new JavaScriptSerializer().Serialize(new g() { Temperature = 52, Humidity = 52 }) });
-                    StringContent content = new StringContent(jsonDatatoPost, Encoding.UTF8, "application/json");
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    var result = client.PostAsync(baseAddress + "api/InternetDashboard", content).Result;
-                    Console.WriteLine(result);
-                }
+                //    target.GetSingle();
 
-                #endregion InternetDashboardController
+                //    target.DeleteSingle();
 
-                Console.WriteLine("Press enter to exit");
+                //    target.PostSingle();
+                //}
+                Console.WriteLine("Press enter to exit to shutdown server.");
                 Console.ReadLine();
             }
             Console.WriteLine("Stopped press enter to exit application");
             Console.ReadLine();
         }
+
+        public static IPAddress GetLocalIpAddress()
+        {
+            if (NetworkInterface.GetIsNetworkAvailable())
+            {
+                var host = Dns.GetHostEntry(Dns.GetHostName());
+                foreach (var ip in host.AddressList)
+                {
+                    if (ip.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        return ip;
+                    }
+                }
+                throw new Exception("Local IP Address Not Found!");
+            }
+            else
+            {
+                throw new Exception("Network not connected");
+            }
+        }
     }
 
     public class Startup
     {
-        // This code configures Web API. The Startup class is specified as a type
-        // parameter in the WebApp.Start method.
+        public static string BaseUrl { get; set; }
+
         public void Configuration(IAppBuilder appBuilder)
         {
-            // Configure Web API for self-host. 
             HttpConfiguration config = new HttpConfiguration();
-
-            config.Routes.MapHttpRoute(name: "DefaultApi", routeTemplate: "api/{controller}/");
-            //    config.Routes.MapHttpRoute(name: "ApiById", routeTemplate: "api/{controller}/{id}",
-            //    defaults: new { id = RouteParameter.Optional },
-            //    constraints: new { id = @"^[0-9]+$" }
-            //);
-            //config.DependencyResolver = new g();
-            Console.WriteLine(config.VirtualPathRoot);
+            config.MapHttpAttributeRoutes();
+            appBuilder.UseWebApi(config);
+            config.DependencyResolver = new DependencyResolver(BaseUrl);
+            config.EnsureInitialized();
+            Console.WriteLine("Accepted routes:");
             foreach (var s in config.Services.GetApiExplorer().ApiDescriptions)
             {
-                var apiString = s.HttpMethod.Method + "  " + s.RelativePath;
-                Console.WriteLine(apiString);
+                var apiString = s.HttpMethod.Method + "  " + BaseUrl + s.RelativePath;
+                Console.WriteLine("     " + apiString);
             }
-            appBuilder.UseWebApi(config);
         }
     }
 
-    public class g : IDependencyResolver
+    public class TimeSeriesTests : HttpClient
     {
-        public int Temperature { get; set; }
-        public int Humidity { get; set; }
-        public IDependencyScope BeginScope()
+        public TimeSeriesTests(string baseUrl)
         {
-            return new g();
+            base.BaseAddress = new Uri(baseUrl);
         }
 
-        public object GetService(Type serviceType)
+        public void PostMany()
         {
-            var x = new TimeSeriesController();
-            if (x.GetType() == serviceType)
-            {
-                return x;
-            }
-            Console.WriteLine(serviceType);
-            return null;
+            var data = new Dictionary<string, string>();
+            data.Add(DateTime.MinValue.ToBinary().ToString(), DateTime.MinValue.ToLongDateString());
+            data.Add(DateTime.MaxValue.ToBinary().ToString(), DateTime.MaxValue.ToLongDateString());
+            var jsonDatatoPost = new JavaScriptSerializer().Serialize(data);
+            StringContent content = new StringContent(jsonDatatoPost, Encoding.UTF8, "application/json");
+            DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var result = PostAsync("TimeSeries/Laukik", content).Result;
+            if (result.StatusCode != System.Net.HttpStatusCode.OK) throw new Exception("Failed");
         }
 
-        public IEnumerable<object> GetServices(Type serviceType)
+        public void PostSingle()
         {
-            return new List<object>();
+            var data = new Dictionary<string, string>();
+            var jsonDatatoPost = new JavaScriptSerializer().Serialize(data);
+            StringContent content = new StringContent(jsonDatatoPost, Encoding.UTF8, "application/json");
+            DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var result = PostAsync("TimeSeries/Laukik/" + DateTime.UtcNow.ToString("o") + "/MyValue", content).Result;
+            if (result.StatusCode != System.Net.HttpStatusCode.OK) throw new Exception("Failed");
         }
 
-        public void Dispose()
+        public void GetSingle()
         {
-            Console.WriteLine("Disposed");
+            var result = GetAsync("TimeSeries/Laukik/" + DateTime.MinValue.ToBinary().ToString()).Result;
+            var str = result.Content.ReadAsStringAsync().Result;
+            if (result.StatusCode != System.Net.HttpStatusCode.OK) throw new Exception("Failed");
+        }
+
+        public void DeleteSingle()
+        {
+            var result = DeleteAsync("TimeSeries/Laukik/" + DateTime.MinValue.ToBinary().ToString()).Result;
+            var str = result.Content.ReadAsStringAsync().Result;
+            if (result.StatusCode != System.Net.HttpStatusCode.OK) throw new Exception("Failed");
         }
     }
 
-    public class TimeSeriesController
+    public class InternetDashboardTests : HttpClient
     {
-        public void Post(string url)
+        public InternetDashboardTests(string baseUrl)
         {
-            using (var client = new HttpClient())
-            {
-                var data = new Dictionary<string, string>();
-                data.Add(DateTime.MinValue.ToBinary().ToString(), DateTime.MinValue.ToLongDateString());
-                data.Add(DateTime.MaxValue.ToBinary().ToString(), DateTime.MaxValue.ToLongDateString());
-                var jsonDatatoPost = new JavaScriptSerializer().Serialize(data);
-                StringContent content = new StringContent(jsonDatatoPost, Encoding.UTF8, "application/json");
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                var result = client.PostAsync(url + "?uniqueName=Laukik", content).Result;
-                if (result.StatusCode != System.Net.HttpStatusCode.OK) throw new Exception("Failed");
-                Console.WriteLine(result);
-            }
+            base.BaseAddress = new Uri(baseUrl);
+        }
+
+        public void Post()
+        {
+            var data = new JavaScriptSerializer().Serialize(new TestData() { Temperature = 52, Humidity = 52 });
+            StringContent dummyContent = new StringContent("Laukik", Encoding.UTF8, "application/json");
+            DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var result = PostAsync("InternetDashboard/Laukik9562/" + data, dummyContent).Result;
+            if (result.StatusCode != System.Net.HttpStatusCode.OK) throw new Exception("Failed");
+        }
+
+        public class TestData
+        {
+            public int Temperature { get; set; }
+            public int Humidity { get; set; }
+        }
+    }
+
+    public class KeyValueTests : HttpClient
+    {
+        public KeyValueTests(string baseUrl)
+        {
+            base.BaseAddress = new Uri(baseUrl);
+        }
+
+        public void PostSingle()
+        {
+            var data = new Dictionary<string, string>();
+            data.Add(DateTime.MinValue.ToBinary().ToString(), DateTime.MinValue.ToLongDateString());
+            data.Add(DateTime.MaxValue.ToBinary().ToString(), DateTime.MaxValue.ToLongDateString());
+            var jsonDatatoPost = new JavaScriptSerializer().Serialize(data);
+            StringContent content = new StringContent(jsonDatatoPost, Encoding.UTF8, "application/json");
+            DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var result = PostAsync("KeyValuePair", content).Result;
+            if (result.StatusCode != System.Net.HttpStatusCode.OK) throw new Exception("Failed");
+        }
+
+        public void GetSingle()
+        {
+            var result = GetAsync("KeyValuePair/" + DateTime.MinValue.ToBinary().ToString()).Result;
+            var str = result.Content.ReadAsStringAsync().Result;
+            if (result.StatusCode != System.Net.HttpStatusCode.OK) throw new Exception("Failed");
+        }
+
+        public void DeleteSingle()
+        {
+            var result = DeleteAsync("KeyValuePair/" + DateTime.MinValue.ToBinary().ToString()).Result;
+            var str = result.Content.ReadAsStringAsync().Result;
+            if (result.StatusCode != System.Net.HttpStatusCode.OK) throw new Exception("Failed");
+        }
+
+        public void PutSingle()
+        {
+            StringContent dummyContent = new StringContent("", Encoding.UTF8, "application/json");
+            var result = PutAsync("KeyValuePair/Update/" + DateTime.MinValue.ToBinary().ToString() + "/Jan", dummyContent).Result;
+            var str = result.Content.ReadAsStringAsync().Result;
+            if (result.StatusCode != System.Net.HttpStatusCode.OK) throw new Exception("Failed");
         }
     }
 }

@@ -8,15 +8,17 @@ namespace Controllers
 {
     public class InternetDashboardController : ApiController
     {
-        public IHttpActionResult Post([FromBody]DweetSample value)
+        [HttpPost]
+        [Route("InternetDashboard/{uniqueName}/{jsonValue}")]
+        public IHttpActionResult Post(string uniqueName,string jsonValue)
         {
             try
             {
                 using (var client = new HttpClient())
                 {
-                    StringContent content = new StringContent(value.Data, Encoding.UTF8, "application/json");
+                    StringContent content = new StringContent(jsonValue, Encoding.UTF8, "application/json");
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    var result = client.PostAsync("http://dweet.io/dweet/for/" + value.ResourceName, content).Result;
+                    var result = client.PostAsync("http://dweet.io/dweet/for/" + uniqueName, content).Result;
                     if (result.IsSuccessStatusCode)
                         return Ok();
 
@@ -27,12 +29,6 @@ namespace Controllers
             {
                 return InternalServerError(ex);
             }
-        }
-
-        public class DweetSample
-        {
-            public string ResourceName { get; set; }
-            public string Data { get; set; }
         }
     }
 }
