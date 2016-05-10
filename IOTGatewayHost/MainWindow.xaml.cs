@@ -26,6 +26,13 @@ namespace IOTGatewayHost
             InitializeComponent();
 
             WireupTabcontrol(MainContainer, MainContainerHeaders);
+
+            for (int t = 0; t < 500; t++)
+            {
+                TxtLog.Text += t + Environment.NewLine;
+            }
+            
+            //TxtLog.Text += "Ragji" + Environment.NewLine;
         }
 
         private static void WireupTabcontrol(TabControl container, ItemsControl headers)
@@ -38,7 +45,8 @@ namespace IOTGatewayHost
                 {
                     HeaderText = tab.Header.ToString(),
                     NavigateAction = actionObject,
-                    Index = container.Items.IndexOf(tab)
+                    Index = container.Items.IndexOf(tab),
+                    Checked = container.Items.IndexOf(tab) == 0
                 });
             }
             headers.ItemsSource = tabHeaders;
@@ -49,6 +57,7 @@ namespace IOTGatewayHost
             public string HeaderText { get; set; }
             public int Index { get; set; }
             public TabNavigateCommand NavigateAction { get; set; }
+            public bool Checked { get; set; }
         }
 
         public class TabNavigateCommand : ICommand

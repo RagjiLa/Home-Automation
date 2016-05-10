@@ -4,15 +4,17 @@
         Title="MainWindow" Height="350" Width="525">
     <Grid>
         <Grid.Resources>
-            <SolidColorBrush x:Key="AccentColor" Color="#FF9F39" />
-            <SolidColorBrush x:Key="ForegroundColor" Color="White" />
+            <Color x:Key="AccentColor">#FF9F39</Color>
+            <Color x:Key="ForegroundColor">White</Color>
+            <SolidColorBrush x:Key="AccentColorBrush" Color="{StaticResource AccentColor}" />
+            <SolidColorBrush x:Key="ForegroundColorBrush" Color="{StaticResource ForegroundColor}" />
             <Style TargetType="TextBlock">
-                <Setter Property="Foreground" Value="White" ></Setter>
+                <Setter Property="Foreground" Value="{StaticResource ForegroundColorBrush}" ></Setter>
             </Style>
             <Style TargetType="RadioButton">
                 <Setter Property="Background" Value="{x:Null}" />
                 <Setter Property="BorderBrush" Value="{x:Null}" />
-                <Setter Property="Foreground" Value="{StaticResource ForegroundColor}" />
+                <Setter Property="Foreground" Value="{StaticResource ForegroundColorBrush}" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type RadioButton}">
@@ -20,13 +22,9 @@
                                 <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                             </Border>
                             <ControlTemplate.Triggers>
-                                <Trigger Property="IsKeyboardFocused" Value="true">
-                                </Trigger>
-                                <Trigger Property="IsPressed" Value="true">
-                                </Trigger>
                                 <Trigger Property="ToggleButton.IsChecked" Value="true">
-                                    <Setter Property="Foreground" Value="{StaticResource ForegroundColor}"/>
-                                    <Setter Property="Background" Value="{StaticResource AccentColor}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource ForegroundColorBrush}"/>
+                                    <Setter Property="Background" Value="{StaticResource AccentColorBrush}"/>
                                 </Trigger>
                                 <Trigger Property="IsEnabled" Value="false">
                                     <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
@@ -37,14 +35,42 @@
                 </Setter>
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="BorderBrush" Value="{StaticResource AccentColor}" />
+                        <Setter Property="BorderBrush" Value="{StaticResource AccentColorBrush}" />
                         <Setter Property="FontWeight" Value="Normal" />
                     </Trigger>
                     <Trigger Property="IsFocused" Value="True">
                         <Setter Property="FontWeight" Value="Normal" />
-                        <Setter Property="BorderBrush" Value="{StaticResource AccentColor}" />
+                        <Setter Property="BorderBrush" Value="{StaticResource AccentColorBrush}" />
                     </Trigger>
                 </Style.Triggers>
+            </Style>
+            <Style x:Key="Triggers" TargetType="TextBox">
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="OverridesDefaultStyle" Value="True"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="AllowDrop" Value="true"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type TextBoxBase}">
+                            <Border 
+                                    Name="Border"
+                                    CornerRadius="2" 
+                                    Padding="2"
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    BorderThickness="0" >
+                                <ScrollViewer Margin="0" VerticalScrollBarVisibility="Auto" x:Name="PART_ContentHost" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="Border" Property="Background" Value="Transparent"/>
+                                    <Setter TargetName="Border" Property="BorderBrush" Value="Transparent"/>
+                                    <Setter Property="Foreground" Value="{StaticResource ForegroundColorBrush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
         </Grid.Resources>
         <Grid.Background>
@@ -60,14 +86,14 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Margin="5" Orientation="Horizontal"  HorizontalAlignment="Left" VerticalAlignment="Center">
-            <Path Width="38" Height="20" Margin="5" Stretch="Fill" StrokeThickness="1" StrokeLineJoin="Round" Stroke="{StaticResource AccentColor}" Fill="{StaticResource ForegroundColor}" Data="F1 M 49.0833,33.25C 53.4555,33.25 57,36.7944 57,41.1666C 57,45.5389 53.3723,48.9999 49,49L 23,49.0001C 20.8139,49 19,47.3111 19,45.125C 19,43.1866 20.3931,41.5737 22.2327,41.233C 22.1892,40.9533 22.1667,40.6667 22.1667,40.3749C 22.1667,37.3993 24.5122,34.9712 27.4553,34.8389C 28.7579,31.1462 32.2782,28.4999 36.4167,28.4999C 40.3458,28.4999 43.7179,30.8853 45.1637,34.2868C 46.3193,33.627 47.6573,33.25 49.0833,33.25 Z "/>
+            <Path Width="38" Height="20" Margin="5" Stretch="Fill" StrokeThickness="1" StrokeLineJoin="Round" Stroke="{StaticResource AccentColorBrush}" Fill="{StaticResource ForegroundColorBrush}" Data="F1 M 49.0833,33.25C 53.4555,33.25 57,36.7944 57,41.1666C 57,45.5389 53.3723,48.9999 49,49L 23,49.0001C 20.8139,49 19,47.3111 19,45.125C 19,43.1866 20.3931,41.5737 22.2327,41.233C 22.1892,40.9533 22.1667,40.6667 22.1667,40.3749C 22.1667,37.3993 24.5122,34.9712 27.4553,34.8389C 28.7579,31.1462 32.2782,28.4999 36.4167,28.4999C 40.3458,28.4999 43.7179,30.8853 45.1637,34.2868C 46.3193,33.627 47.6573,33.25 49.0833,33.25 Z "/>
             <TextBlock  FontSize="20" Margin="5" HorizontalAlignment="Left" VerticalAlignment="Center" >IOT Dashboard</TextBlock>
         </StackPanel>
 
         <ItemsControl Grid.Row="1" x:Name="MainContainerHeaders">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <RadioButton GroupName="TabHeaders" Margin="3" Content="{Binding HeaderText}" Command="{Binding NavigateAction}" CommandParameter="{Binding }" ></RadioButton>
+                    <RadioButton IsChecked="{Binding Checked}" GroupName="TabHeaders" Margin="3" Content="{Binding HeaderText}" Command="{Binding NavigateAction}" CommandParameter="{Binding }" ></RadioButton>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
             <ItemsControl.ItemsPanel>
@@ -86,7 +112,23 @@
             <TabItem>
                 <TabItem.Header>Dashboard</TabItem.Header>
                 <TabItem.Content>
-                    <Button>Hello</Button>
+                    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="0.7*" />
+                            <ColumnDefinition Width="2" />
+                            <ColumnDefinition Width="0.3*" />
+                        </Grid.ColumnDefinitions>
+                        <GridSplitter Grid.Column="1" Width="2"  HorizontalAlignment="Stretch" >
+                            <GridSplitter.Background>
+                                <LinearGradientBrush EndPoint="1,1" StartPoint="0,0">
+                                    <GradientStop Color="Transparent" Offset="0.1"/>
+                                    <GradientStop Color="{StaticResource AccentColor}" Offset="0.6"/>
+                                    <GradientStop Color="Transparent" Offset="0.9"/>
+                                </LinearGradientBrush>
+                            </GridSplitter.Background>
+                        </GridSplitter>
+                        <TextBox Style="{StaticResource Triggers}" Grid.Column="2" Focusable="false" Foreground="{StaticResource ForegroundColorBrush}" x:Name="TxtLog" IsReadOnly="true" Background="Transparent" BorderBrush="Transparent" AcceptsReturn="True" AcceptsTab="True" TextWrapping="NoWrap"/>
+                    </Grid>
                 </TabItem.Content>
             </TabItem>
             <TabItem>
