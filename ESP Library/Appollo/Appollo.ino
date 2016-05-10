@@ -20,7 +20,7 @@ void ConnectToWifi()
   byte maximumPowerCycle = 20;
 
   char ssid2[] = "Blackknife_EXT";
-  char password2[] = "19871116";
+  char password2[] = "****";
   powerUsageCtr = 0;
   while (powerUsageCtr <= maximumPowerCycle)
   {

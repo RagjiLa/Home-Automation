@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.Http.Dependencies;
 
-namespace OwinHost
+namespace IOTGatewayHost.Business_Logic
 {
     public class DependencyResolver : IDependencyResolver
     {

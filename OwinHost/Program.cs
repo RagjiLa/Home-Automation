@@ -1,23 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Dispatcher;
-using Microsoft.Owin.Hosting;
-using Owin;
-using System.Web.Script.Serialization;
-using Controllers;
-using System.Data;
-using System.Web.Http.Dependencies;
-using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Text;
+using System.Web.Script.Serialization;
 
 namespace OwinHost
 {
@@ -26,47 +15,40 @@ namespace OwinHost
         static void Main(string[] args)
         {
             string baseAddress = "http://" + GetLocalIpAddress() + ":9000/";
-            AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\Controllers.dll"));
-            AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\DeviceControllers.dll"));
 
-            Startup.BaseUrl = baseAddress;
-            using (WebApp.Start<Startup>(baseAddress))
+            Console.WriteLine("Connecting @" + baseAddress);
+
+            //using (var target = new KeyValueTests(baseAddress))
+            //{
+            //    target.DeleteSingle();
+
+            //    target.PostSingle();
+
+            //    target.GetSingle();
+
+            //    target.PutSingle();
+
+            //    target.DeleteSingle();
+            //}
+
+            //using (var target = new InternetDashboardTests(baseAddress))
+            //{
+            //    target.Post();
+            //}
+
+            using (var target = new TimeSeriesTests(baseAddress))
             {
-                Console.WriteLine("Server Activated @" + baseAddress);
+                //target.PostMany();
 
-                //using (var target = new KeyValueTests(baseAddress))
-                //{
-                //    target.DeleteSingle();
+                target.GetSingle();
 
-                //    target.PostSingle();
+                //target.DeleteSingle();
 
-                //    target.GetSingle();
-
-                //    target.PutSingle();
-
-                //    target.DeleteSingle();
-                //}
-
-                //using (var target = new InternetDashboardTests(baseAddress))
-                //{
-                //    target.Post();
-                //}
-
-                //using (var target = new TimeSeriesTests(baseAddress))
-                //{
-                //    target.PostMany();
-
-                //    target.GetSingle();
-
-                //    target.DeleteSingle();
-
-                //    target.PostSingle();
-                //}
-                Console.WriteLine("Press enter to exit to shutdown server.");
-                Console.ReadLine();
+                //target.PostSingle();
             }
             Console.WriteLine("Stopped press enter to exit application");
             Console.ReadLine();
+
         }
 
         public static IPAddress GetLocalIpAddress()
@@ -90,25 +72,7 @@ namespace OwinHost
         }
     }
 
-    public class Startup
-    {
-        public static string BaseUrl { get; set; }
-
-        public void Configuration(IAppBuilder appBuilder)
-        {
-            HttpConfiguration config = new HttpConfiguration();
-            config.MapHttpAttributeRoutes();
-            appBuilder.UseWebApi(config);
-            config.DependencyResolver = new DependencyResolver(BaseUrl);
-            config.EnsureInitialized();
-            Console.WriteLine("Accepted routes:");
-            foreach (var s in config.Services.GetApiExplorer().ApiDescriptions)
-            {
-                var apiString = s.HttpMethod.Method + "  " + BaseUrl + s.RelativePath;
-                Console.WriteLine("     " + apiString);
-            }
-        }
-    }
+ 
 
     public class TimeSeriesTests : HttpClient
     {

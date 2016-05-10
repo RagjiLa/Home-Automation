@@ -13,26 +13,44 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using IOTGatewayHost.Business_Logic;
 
 namespace IOTGatewayHost
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+
     public partial class MainWindow : Window
     {
+        private object _syncLock = new object();
         public MainWindow()
         {
             InitializeComponent();
 
             WireupTabcontrol(MainContainer, MainContainerHeaders);
 
-            for (int t = 0; t < 500; t++)
+            this.Loaded += MainWindow_Loaded;
+            this.Closing += MainWindow_Closing;
+        }
+
+        private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            ((App)App.Current).ApiHost.Stop();
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            Logger.Logged += Logger_Logged;
+            ((App)App.Current).ApiHost.Start();
+        }
+
+        private void Logger_Logged(object sender, LoggedArgs e)
+        {
+            lock (_syncLock)
             {
-                TxtLog.Text += t + Environment.NewLine;
+                Application.Current.Dispatcher.Invoke(() => TxtLog.AppendText(e.Message), System.Windows.Threading.DispatcherPriority.Render);
             }
-            
-            //TxtLog.Text += "Ragji" + Environment.NewLine;
         }
 
         private static void WireupTabcontrol(TabControl container, ItemsControl headers)

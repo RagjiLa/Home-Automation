@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IOTGatewayHost.Business_Logic;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -13,5 +14,14 @@ namespace IOTGatewayHost
     /// </summary>
     public partial class App : Application
     {
+        private OwinHost _apiHost = null;
+        public OwinHost ApiHost
+        {
+            get
+            {
+                if (_apiHost == null) _apiHost = new OwinHost();
+                return _apiHost;
+            }
+        }
     }
 }

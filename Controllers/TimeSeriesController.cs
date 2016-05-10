@@ -321,7 +321,7 @@ namespace Controllers
                 {
                     command.Connection = sqlConnection;
                     sqlConnection.Open();
-                    if (String.IsNullOrEmpty(tableName)) CreateTableIfNotEsists(tableName, sqlConnection);
+                    if (!String.IsNullOrEmpty(tableName)) CreateTableIfNotEsists(tableName, sqlConnection);
                     using (var reader = command.ExecuteReader())
                     {
                         var dataTable = new DataTable();
