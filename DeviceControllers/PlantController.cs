@@ -9,8 +9,14 @@ namespace DeviceControllers
 {
     public class PlantController : ApiController
     {
-        public IHttpActionResult Post([FromBody]Dictionary<string, string> timeseriesData)
+        [HttpPost]
+        [Route("Plant")]
+        public IHttpActionResult Post([FromBody]RequestData data)
         {
+            //Historise data
+            //Calculate water needs to be put
+            //raise any alarms if necessary
+            //dash board display if any display
             return Ok();
         }
 

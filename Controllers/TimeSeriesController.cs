@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SQLite;
 using System.IO;
 using System.Threading;
@@ -9,17 +10,24 @@ namespace Controllers
 {
     public class TimeSeriesController : ApiController
     {
-        public IHttpActionResult Post(string uniqueName, [FromBody]Dictionary<string, string> timeseriesData)
+        public string DataBaseFullPath { get; set; }
+
+        public TimeSeriesController()
+        {
+            string dataBasePath = Path.Combine(Environment.CurrentDirectory, "Stores");
+
+            DataBaseFullPath = CreateDatabaseIfNotExists(dataBasePath, "TimeseriesStore.db3");
+        }
+
+        [HttpPost]
+        [Route("TimeSeries/{DeviceName}")]
+        public IHttpActionResult Post(string DeviceName, [FromBody]Dictionary<string, string> timeseriesData)
         {
             try
             {
                 if (timeseriesData.Values.Count > 0)
                 {
-                    string dataBasePath = Path.Combine(Environment.CurrentDirectory, "Stores");
-
-                    dataBasePath = CreateDatabaseIfNotExists(dataBasePath, "TimeseriesStore.db3");
-
-                    var failures = InsertIntoDatabse(dataBasePath, uniqueName, timeseriesData);
+                    var failures = InsertIntoDatabse(DataBaseFullPath, DeviceName, timeseriesData);
                     if (failures.Count > 0)
                     {
                         var str = string.Empty;
@@ -40,15 +48,21 @@ namespace Controllers
             }
         }
 
-        public IHttpActionResult GetSingle(string uniqueName, string timeStamp)
+        [HttpPost]
+        [Route("TimeSeries/{DeviceName}/{time}/{value}")]
+        public IHttpActionResult Post(string DeviceName, string time, string value)
+        {
+            return Post(DeviceName, new Dictionary<string, string>() { { time, value } });
+        }
+
+        [HttpGet]
+        [Route("TimeSeries/{DeviceName}/{timeStamp}")]
+        public IHttpActionResult GetSingle(string DeviceName, string timeStamp)
         {
             try
             {
-                string dataBasePath = Path.Combine(Environment.CurrentDirectory, "Stores");
-
-                dataBasePath = CreateDatabaseIfNotExists(dataBasePath, "TimeseriesStore.db3");
                 var value = string.Empty;
-                if (QueryTable(dataBasePath, uniqueName, timeStamp, out value))
+                if (QueryTable(DeviceName, timeStamp, out value))
                     return Ok<string>(value);
                 else
                     return Content(System.Net.HttpStatusCode.NotFound, "Key doesnot exits");
@@ -59,21 +73,91 @@ namespace Controllers
             }
         }
 
-        public IHttpActionResult GetMany(string uniqueName, List<string> selectiveTimes)
+        //[NonAction]
+        //public IHttpActionResult GetMany(string uniqueName, [FromBody]List<string> timestamps)
+        //{
+        //    try
+        //    {
+        //        if (timestamps.Count > 0)
+        //        {
+        //            string dataBasePath = Path.Combine(Environment.CurrentDirectory, "Stores");
+
+        //            dataBasePath = CreateDatabaseIfNotExists(dataBasePath, "TimeseriesStore.db3");
+        //            var results = QueryTable(dataBasePath, uniqueName, timestamps);
+        //            return Ok<Dictionary<string, string>>(results);
+        //        }
+        //        else
+        //        {
+        //            return Content(System.Net.HttpStatusCode.BadRequest, "Should contain one or more time");
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return InternalServerError(ex);
+        //    }
+        //}
+
+        //[NonAction]
+        ////[Route("TimeSeries/Recent/{uniqueName}/{recentCount}")]
+        //public IHttpActionResult GetRecent(string uniqueName, int recentCount)
+        //{
+        //    try
+        //    {
+        //        if (recentCount > 0)
+        //        {
+        //            string dataBasePath = Path.Combine(Environment.CurrentDirectory, "Stores");
+
+        //            dataBasePath = CreateDatabaseIfNotExists(dataBasePath, "TimeseriesStore.db3");
+        //            var results = QueryTable(dataBasePath, uniqueName, recentCount);
+        //            return Ok<Dictionary<string, string>>(results);
+        //        }
+        //        else
+        //        {
+        //            return Content(System.Net.HttpStatusCode.BadRequest, "Recent Count has to be a positive number, and cannot be " + recentCount);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return InternalServerError(ex);
+        //    }
+        //}
+
+        [HttpDelete]
+        [Route("TimeSeries/{DeviceName}/{timeStamp}")]
+        public IHttpActionResult DeleteByTimestamp(string DeviceName, string timestamp)
         {
             try
             {
-                if (selectiveTimes.Count > 0)
-                {
-                    string dataBasePath = Path.Combine(Environment.CurrentDirectory, "Stores");
+                DeleteRow(DeviceName, timestamp);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
 
-                    dataBasePath = CreateDatabaseIfNotExists(dataBasePath, "TimeseriesStore.db3");
-                    var results = QueryTable(dataBasePath, uniqueName, selectiveTimes);
-                    return Ok<Dictionary<string, string>>(results);
-                }
-                else
+        [HttpGet]
+        [Route("TimeSeries/Devices")]
+        public IHttpActionResult GetDevices(string uniqueName, string timeStamp)
+        {
+            try
+            { 
+                using (SQLiteCommand command = new SQLiteCommand())
                 {
-                    return Content(System.Net.HttpStatusCode.BadRequest, "Should contain one or more time");
+                    var returnValue = new List<String>();
+                    command.CommandText = "SELECT name FROM sqlite_master WHERE type='table'";
+                    using (var dt = QueryDatabaseWithWithReader(string.Empty, command))
+                    {
+                        if (dt.Rows.Count <= 0) return Content(System.Net.HttpStatusCode.NoContent, "");
+                        foreach (DataRow row in dt.Rows)
+                        {
+                            var tableName = row[0].ToString();
+                            returnValue.Add(tableName.Split("_".ToCharArray())[0]);
+                        }
+
+                    }
+                    return Ok(returnValue);
                 }
             }
             catch (Exception ex)
@@ -82,37 +166,12 @@ namespace Controllers
             }
         }
 
-        public IHttpActionResult GetRecent(string uniqueName, int recentCount)
+        [HttpGet]
+        [Route("TimeSeries/Tags/{DeviceName}")]
+        public IHttpActionResult GetDeviceTags(string DeviceName)
         {
             try
             {
-                if (recentCount > 0)
-                {
-                    string dataBasePath = Path.Combine(Environment.CurrentDirectory, "Stores");
-
-                    dataBasePath = CreateDatabaseIfNotExists(dataBasePath, "TimeseriesStore.db3");
-                    var results = QueryTable(dataBasePath, uniqueName, recentCount);
-                    return Ok<Dictionary<string, string>>(results);
-                }
-                else
-                {
-                    return Content(System.Net.HttpStatusCode.BadRequest, "Recent Count has to be a positive number, and cannot be " + recentCount);
-                }
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
-            }
-        }
-
-        public IHttpActionResult DeleteByTimestamp(string uniqueName, string timestamp)
-        {
-            try
-            {
-                string dataBasePath = Path.Combine(Environment.CurrentDirectory, "Stores");
-
-                dataBasePath = CreateDatabaseIfNotExists(dataBasePath, "TimeseriesStore.db3");
-                DeleteRow(dataBasePath, uniqueName, timestamp);
                 return Ok();
             }
             catch (Exception ex)
@@ -138,7 +197,7 @@ namespace Controllers
             //Verify Table exists
             using (SQLiteCommand sqlCreateTableCmd = new SQLiteCommand(sqlConnection))
             {
-                sqlCreateTableCmd.CommandText = @"CREATE TABLE IF NOT EXISTS " + tableName + " ( [ID] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, [Time] TEXT NOT NULL, [Value] NVARCHAR(255), [Flags] INT)";
+                sqlCreateTableCmd.CommandText = @"CREATE TABLE IF NOT EXISTS [" + tableName + "] ( [ID] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, [Time] TEXT NOT NULL, [Value] NVARCHAR(255), [Flags] INT)";
                 sqlCreateTableCmd.ExecuteNonQuery();
             }
         }
@@ -164,7 +223,7 @@ namespace Controllers
 
                     using (SQLiteCommand sqlInsertCmd = new SQLiteCommand(sqlConnection))
                     {
-                        sqlInsertCmd.CommandText = "INSERT INTO Timeseries ([Time],[Value],[FLAGS])  VALUES (@timeLong, @data,0)";
+                        sqlInsertCmd.CommandText = "INSERT INTO [" + tableName + "] ([Time],[Value],[FLAGS])  VALUES (@timeLong, @data,0)";
                         var timeLong = new SQLiteParameter("@timeLong");
                         var data = new SQLiteParameter("@data");
                         timeLong.Value = row.Key;
@@ -179,110 +238,103 @@ namespace Controllers
             return returnResult;
         }
 
-        private bool QueryTable(string databaseFullPath, string tableName, string queryTime, out string value)
+        private bool QueryTable(string tableName, string queryTime, out string value)
         {
-            using (SQLiteConnection sqlConnection = new SQLiteConnection("Data Source=" + databaseFullPath))
+            value = string.Empty;
+            using (SQLiteCommand sqlQueryTableCmd = new SQLiteCommand())
             {
-                sqlConnection.Open();
-                CreateTableIfNotEsists(tableName, sqlConnection);
-                using (SQLiteCommand sqlQueryTableCmd = new SQLiteCommand(sqlConnection))
+                sqlQueryTableCmd.CommandText = "select [value] from [" + tableName + "] where [FLAGS]==0 and [Time] == @timeLong";
+                var timeLong = new SQLiteParameter("@timeLong");
+                timeLong.Value = queryTime;
+                sqlQueryTableCmd.Parameters.Add(timeLong);
+                using (var dt = QueryDatabaseWithWithReader(tableName, sqlQueryTableCmd))
                 {
-                    sqlQueryTableCmd.CommandText = "select [value] from Timeseries where [FLAGS]==0 and [Time] == @timeLong";
-                    var timeLong = new SQLiteParameter("@timeLong");
-                    timeLong.Value = queryTime;
-                    sqlQueryTableCmd.Parameters.Add(timeLong);
-
-                    value = string.Empty;
-                    bool rowsPresent = false;
-                    using (var dataReader = sqlQueryTableCmd.ExecuteReader())
+                    if (dt.Rows.Count <= 0) return false;
+                    foreach (DataRow row in dt.Rows)
                     {
-                        while (dataReader.Read())
-                        {
-                            rowsPresent = true;
-                            value = (string)dataReader[0];
-                        }
-                        dataReader.Close();
+                        value = (string)row[0];
                     }
-                    sqlConnection.Close();
-                    return rowsPresent;
                 }
+                return true;
             }
         }
 
-        private Dictionary<string, string> QueryTable(string databaseFullPath, string tableName, List<string> alltimes)
-        {
-            var returnValue = new Dictionary<string, string>();
-            var stringValue = string.Empty;
-            foreach (var time in alltimes) stringValue += " " + time + " ,";
-            stringValue = stringValue.Remove(stringValue.Length - 1, 1);
-            using (SQLiteConnection sqlConnection = new SQLiteConnection("Data Source=" + databaseFullPath))
-            {
-                sqlConnection.Open();
-                CreateTableIfNotEsists(tableName, sqlConnection);
-                using (SQLiteCommand sqlQueryTableCmd = new SQLiteCommand(sqlConnection))
-                {
-                    sqlQueryTableCmd.CommandText = "select [Time] , [value] from Timeseries where [FLAGS]==0 and [Time] in ( " + stringValue + " )";
+        //private Dictionary<string, string> QueryTable( string tableName, List<string> alltimes)
+        //{
+        //    var returnValue = new Dictionary<string, string>();
+        //    var stringValue = string.Empty;
+        //    foreach (var time in alltimes) stringValue += " " + time + " ,";
+        //    stringValue = stringValue.Remove(stringValue.Length - 1, 1);
+        //    using (SQLiteCommand sqlQueryTableCmd = new SQLiteCommand())
+        //    {
+        //        sqlQueryTableCmd.CommandText = "select [Time] , [value] from [" + tableName + "] where [FLAGS]==0 and [Time] in ( " + stringValue + " )";
+        //        using (var dt = QueryDatabaseWithWithReader(tableName, sqlQueryTableCmd))
+        //        {
+        //            foreach (DataRow row in dt.Rows)
+        //            {
+        //                returnValue.Add((string)row[0], (string)row[1]);
+        //            }
+        //        }
+        //        return returnValue;
+        //    }
+        //}
 
-                    using (var dataReader = sqlQueryTableCmd.ExecuteReader())
+        //private Dictionary<string, string> QueryTable(string tableName, int recentCount)
+        //{
+        //    var returnValue = new Dictionary<string, string>();
+
+        //    using (SQLiteCommand sqlQueryTableCmd = new SQLiteCommand())
+        //    {
+        //        sqlQueryTableCmd.CommandText = "select [Time] , [value] from [" + tableName + "] where [FLAGS]==0 LIMIT @limit  ";
+        //        var limitCount = new SQLiteParameter("limit");
+        //        limitCount.Value = recentCount;
+        //        sqlQueryTableCmd.Parameters.Add(limitCount);
+        //        using (var dt = QueryDatabaseWithWithReader(tableName, sqlQueryTableCmd))
+        //        {
+        //            foreach (DataRow row in dt.Rows)
+        //            {
+        //                returnValue.Add((string)row[0], (string)row[1]);
+        //            }
+        //        }
+        //        return returnValue;
+
+        //    }
+        //}
+
+        private void DeleteRow(string tableName, string timestamp)
+        {
+            using (var sqlQueryTableCmd = new SQLiteCommand())
+            {
+                sqlQueryTableCmd.CommandText = "Update [" + tableName + "] set flags=1 where [Time]==@timeStamp";
+                var timeLong = new SQLiteParameter("timeStamp");
+                timeLong.Value = timestamp;
+                sqlQueryTableCmd.Parameters.Add(timeLong);
+                using (var dt = QueryDatabaseWithWithReader(tableName, sqlQueryTableCmd)) { }
+            }
+        }
+
+        private DataTable QueryDatabaseWithWithReader(string tableName, SQLiteCommand command)
+        {
+            using (SQLiteConnection sqlConnection = new SQLiteConnection("Data Source=" + DataBaseFullPath))
+            {
+                using (command)
+                {
+                    command.Connection = sqlConnection;
+                    sqlConnection.Open();
+                    if (String.IsNullOrEmpty(tableName)) CreateTableIfNotEsists(tableName, sqlConnection);
+                    using (var reader = command.ExecuteReader())
                     {
-                        while (dataReader.Read())
-                        {
-                            returnValue.Add((string)dataReader[0], (string)dataReader[1]);
-                        }
-                        dataReader.Close();
+                        var dataTable = new DataTable();
+                        dataTable.Load(reader);
+                        reader.Close();
+                        sqlConnection.Close();
+                        return dataTable;
                     }
-                    sqlConnection.Close();
-                    return returnValue;
                 }
             }
         }
 
-        private Dictionary<string, string> QueryTable(string databaseFullPath, string tableName, int recentCount)
-        {
-            var returnValue = new Dictionary<string, string>();
-            using (SQLiteConnection sqlConnection = new SQLiteConnection("Data Source=" + databaseFullPath))
-            {
-                sqlConnection.Open();
-                CreateTableIfNotEsists(tableName, sqlConnection);
-                using (SQLiteCommand sqlQueryTableCmd = new SQLiteCommand(sqlConnection))
-                {
-                    sqlQueryTableCmd.CommandText = "select [Time] , [value] from Timeseries where [FLAGS]==0 LIMIT @limit  ";
-                    var limitCount = new SQLiteParameter("limit");
-                    limitCount.Value = recentCount;
-                    sqlQueryTableCmd.Parameters.Add(limitCount);
 
-                    using (var dataReader = sqlQueryTableCmd.ExecuteReader())
-                    {
-                        while (dataReader.Read())
-                        {
-                            returnValue.Add((string)dataReader[0], (string)dataReader[1]);
-                        }
-                        dataReader.Close();
-                    }
-                    sqlConnection.Close();
-                    return returnValue;
-                }
-            }
-        }
-
-        private void DeleteRow(string databaseFullPath, string tableName, string timestamp)
-        {
-            using (SQLiteConnection sqlConnection = new SQLiteConnection("Data Source=" + databaseFullPath))
-            {
-                sqlConnection.Open();
-                CreateTableIfNotEsists(tableName, sqlConnection);
-                using (SQLiteCommand sqlQueryTableCmd = new SQLiteCommand(sqlConnection))
-                {
-                    sqlQueryTableCmd.CommandText = "Update " + tableName + " set flags=1 where [Time]==@timeStamp";
-                    var timeLong = new SQLiteParameter("timeStamp");
-                    timeLong.Value = timestamp;
-                    sqlQueryTableCmd.Parameters.Add(timeLong);
-
-                    sqlQueryTableCmd.ExecuteScalar();
-                    sqlConnection.Close();
-                }
-            }
-        }
     }
 }
 

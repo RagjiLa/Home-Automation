@@ -14,6 +14,8 @@ namespace Controllers
 {
     public class KeyValuePairController : ApiController
     {
+        [HttpPost]
+        [Route("KeyValuePair/")]
         public IHttpActionResult Post([FromBody]Dictionary<string, string> timeseriesData)
         {
             try
@@ -45,6 +47,22 @@ namespace Controllers
             }
         }
 
+        [HttpPost]
+        [Route("KeyValuePair/{key}/{value}")]
+        public IHttpActionResult PostSingle(string key, string value)
+        {
+            try
+            {
+                return Post(new Dictionary<string, string>() { { key, value } });
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+
+        [HttpGet]
+        [Route("KeyValuePair/{key}")]
         public IHttpActionResult GetSingle(string key)
         {
             try
@@ -64,29 +82,31 @@ namespace Controllers
             }
         }
 
-        public IHttpActionResult GetMany(List<string> keys)
-        {
-            try
-            {
-                if (keys.Count > 0)
-                {
-                    string dataBasePath = Path.Combine(Environment.CurrentDirectory, "Stores");
+        //public IHttpActionResult GetMany(List<string> keys)
+        //{
+        //    try
+        //    {
+        //        if (keys.Count > 0)
+        //        {
+        //            string dataBasePath = Path.Combine(Environment.CurrentDirectory, "Stores");
 
-                    dataBasePath = CreateDatabaseIfNotExists(dataBasePath, "KeyvalueStore.db3");
-                    var results = QueryTable(dataBasePath, keys);
-                    return Ok<Dictionary<string, string>>(results);
-                }
-                else
-                {
-                    return Content(System.Net.HttpStatusCode.BadRequest, "Should contain one or more time");
-                }
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
-            }
-        }
+        //            dataBasePath = CreateDatabaseIfNotExists(dataBasePath, "KeyvalueStore.db3");
+        //            var results = QueryTable(dataBasePath, keys);
+        //            return Ok<Dictionary<string, string>>(results);
+        //        }
+        //        else
+        //        {
+        //            return Content(System.Net.HttpStatusCode.BadRequest, "Should contain one or more time");
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return InternalServerError(ex);
+        //    }
+        //}
 
+        [HttpDelete]
+        [Route("KeyValuePair/{Key}")]
         public IHttpActionResult Delete(string key)
         {
             try
@@ -103,20 +123,22 @@ namespace Controllers
             }
         }
 
-        public IHttpActionResult Put(KeyValuePair<string, string> keyvaluePair)
+        [HttpPut]
+        [Route("KeyValuePair/Update/{key}/{value}")]
+        public IHttpActionResult Put(string key, string value)
         {
             try
             {
-                var result = GetSingle(keyvaluePair.Key).ExecuteAsync(CancellationToken.None).Result;
+                var result = GetSingle(key).ExecuteAsync(CancellationToken.None).Result;
                 if (result.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
                     return Content(System.Net.HttpStatusCode.NotFound, "Key doesnot exists");
                 }
                 else
                 {
-                    result = Delete(keyvaluePair.Key).ExecuteAsync(CancellationToken.None).Result;
+                    result = Delete(key).ExecuteAsync(CancellationToken.None).Result;
                     var insertVal = new Dictionary<string, string>();
-                    insertVal.Add(keyvaluePair.Key, keyvaluePair.Value);
+                    insertVal.Add(key, value);
                     result = Post(insertVal).ExecuteAsync(CancellationToken.None).Result;
                     if (result.StatusCode == System.Net.HttpStatusCode.OK)
                         return Ok();
