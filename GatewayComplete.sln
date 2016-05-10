@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Controllers", "Controllers\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceControllers", "DeviceControllers\DeviceControllers.csproj", "{458490BC-23F8-4962-853E-B772840BC68A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOTGatewayHost", "IOTGatewayHost\IOTGatewayHost.csproj", "{4CDCB0D6-9126-4D91-9A30-0D45CB864481}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,17 @@ Global
 		{458490BC-23F8-4962-853E-B772840BC68A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{458490BC-23F8-4962-853E-B772840BC68A}.Release|x64.ActiveCfg = Release|Any CPU
 		{458490BC-23F8-4962-853E-B772840BC68A}.Release|x64.Build.0 = Release|Any CPU
+		{4CDCB0D6-9126-4D91-9A30-0D45CB864481}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CDCB0D6-9126-4D91-9A30-0D45CB864481}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CDCB0D6-9126-4D91-9A30-0D45CB864481}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{4CDCB0D6-9126-4D91-9A30-0D45CB864481}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{4CDCB0D6-9126-4D91-9A30-0D45CB864481}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4CDCB0D6-9126-4D91-9A30-0D45CB864481}.Debug|x64.Build.0 = Debug|Any CPU
+		{4CDCB0D6-9126-4D91-9A30-0D45CB864481}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CDCB0D6-9126-4D91-9A30-0D45CB864481}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CDCB0D6-9126-4D91-9A30-0D45CB864481}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{4CDCB0D6-9126-4D91-9A30-0D45CB864481}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{4CDCB0D6-9126-4D91-9A30-0D45CB864481}.Release|x64.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
