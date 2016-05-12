@@ -21,13 +21,13 @@ namespace Controllers
 
         [HttpPost]
         [Route("TimeSeries/{DeviceName}")]
-        public IHttpActionResult Post(string DeviceName, [FromBody]Dictionary<string, string> timeseriesData)
+        public IHttpActionResult Post(string deviceName, [FromBody]Dictionary<string, string> timeseriesData)
         {
             try
             {
                 if (timeseriesData.Values.Count > 0)
                 {
-                    var failures = InsertIntoDatabse(DataBaseFullPath, DeviceName, timeseriesData);
+                    var failures = InsertIntoDatabse(DataBaseFullPath, deviceName, timeseriesData);
                     if (failures.Count > 0)
                     {
                         var str = string.Empty;
@@ -50,27 +50,9 @@ namespace Controllers
 
         [HttpPost]
         [Route("TimeSeries/{DeviceName}/{time}/{value}")]
-        public IHttpActionResult Post(string DeviceName, string time, string value)
+        public IHttpActionResult Post(string deviceName, string time, string value)
         {
-            return Post(DeviceName, new Dictionary<string, string>() { { time, value } });
-        }
-
-        [HttpGet]
-        [Route("TimeSeries/{DeviceName}/{timeStamp}")]
-        public IHttpActionResult GetSingle(string DeviceName, string timeStamp)
-        {
-            try
-            {
-                var value = string.Empty;
-                if (QueryTable(DeviceName, timeStamp, out value))
-                    return Ok<string>(value);
-                else
-                    return Content(System.Net.HttpStatusCode.NotFound, "Key doesnot exits");
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
-            }
+            return Post(deviceName, new Dictionary<string, string>() { { time, value } });
         }
 
         //[NonAction]
@@ -124,11 +106,11 @@ namespace Controllers
 
         [HttpDelete]
         [Route("TimeSeries/{DeviceName}/{timeStamp}")]
-        public IHttpActionResult DeleteByTimestamp(string DeviceName, string timestamp)
+        public IHttpActionResult DeleteByTimestamp(string deviceName, string timestamp)
         {
             try
             {
-                DeleteRow(DeviceName, timestamp);
+                DeleteRow(deviceName, timestamp);
                 return Ok();
             }
             catch (Exception ex)
@@ -137,28 +119,89 @@ namespace Controllers
             }
         }
 
+        //[HttpGet]
+        //[Route("TimeSeries/Devices")]
+        //public IHttpActionResult GetDevices(string uniqueName, string timeStamp)
+        //{
+        //    try
+        //    { 
+        //        using (SQLiteCommand command = new SQLiteCommand())
+        //        {
+        //            var returnValue = new List<String>();
+        //            command.CommandText = "SELECT name FROM sqlite_master WHERE type='table'";
+        //            using (var dt = QueryDatabaseWithWithReader(string.Empty, command))
+        //            {
+        //                if (dt.Rows.Count <= 0) return Content(System.Net.HttpStatusCode.NoContent, "");
+        //                foreach (DataRow row in dt.Rows)
+        //                {
+        //                    var tableName = row[0].ToString();
+        //                    returnValue.Add(tableName.Split("_".ToCharArray())[0]);
+        //                }
+
+        //            }
+        //            return Ok(returnValue);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return InternalServerError(ex);
+        //    }
+        //}
+
+        //[HttpGet]
+        //[Route("TimeSeries/Tags/{DeviceName}")]
+        //public IHttpActionResult GetDeviceTags(string DeviceName)
+        //{
+        //    try
+        //    {
+        //        return Ok();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return InternalServerError(ex);
+        //    }
+        //}
+
         [HttpGet]
-        [Route("TimeSeries/Devices")]
-        public IHttpActionResult GetDevices(string uniqueName, string timeStamp)
+        [Route("TimeSeries/{DeviceName}")]
+        public IHttpActionResult GetSingle(string deviceName, string timeStamp)
         {
             try
-            { 
-                using (SQLiteCommand command = new SQLiteCommand())
+            {
+                var value = string.Empty;
+                if (QueryTable(deviceName, timeStamp, out value))
+                    return Ok<string>(value);
+                else
+                    return Content(System.Net.HttpStatusCode.NotFound, "Key doesnot exits");
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+
+        [HttpGet]
+        [Route("TimeSeries/{deviceName}")]
+        public IHttpActionResult GetDataBetween(string deviceName, string fromTimeStamp, string toTimeStamp)
+        {
+            try
+            {
+                var returnType = new Dictionary<string, string>();
+                using (var sqlQueryTableCmd = new SQLiteCommand())
                 {
-                    var returnValue = new List<String>();
-                    command.CommandText = "SELECT name FROM sqlite_master WHERE type='table'";
-                    using (var dt = QueryDatabaseWithWithReader(string.Empty, command))
+                    sqlQueryTableCmd.CommandText = "select [Time],[value] from " + deviceName + " where [Time] between @fromTime and @toTime";
+                    sqlQueryTableCmd.Parameters.AddWithValue("@fromTime", "strftime('%d-%m-%Y %H:%M:%S','" + fromTimeStamp + "')");
+                    sqlQueryTableCmd.Parameters.AddWithValue("@toTime", "strftime('%d-%m-%Y %H:%M:%S','" + toTimeStamp + "')");
+                    using (var dt = QueryDatabaseWithWithReader(deviceName, sqlQueryTableCmd))
                     {
                         if (dt.Rows.Count <= 0) return Content(System.Net.HttpStatusCode.NoContent, "");
                         foreach (DataRow row in dt.Rows)
                         {
-                            var tableName = row[0].ToString();
-                            returnValue.Add(tableName.Split("_".ToCharArray())[0]);
+                            returnType.Add((string)row[0], (string)row[1]);
                         }
-
                     }
-                    return Ok(returnValue);
                 }
+                return Ok(returnType);
             }
             catch (Exception ex)
             {
@@ -167,12 +210,31 @@ namespace Controllers
         }
 
         [HttpGet]
-        [Route("TimeSeries/Tags/{DeviceName}")]
-        public IHttpActionResult GetDeviceTags(string DeviceName)
+        [Route("TimeSeries/{deviceName}")]
+        public IHttpActionResult GetRelativeDataFrom(string deviceName, string fromTimeStamp, int count)
         {
             try
             {
-                return Ok();
+                var returnType = new Dictionary<string, string>();
+                using (var sqlQueryTableCmd = new SQLiteCommand())
+                {
+                    if (count > 0)
+                        sqlQueryTableCmd.CommandText = "select [Time],[value] from " + deviceName + " where [Time] > @fromTime limit @Count";
+                    else
+                        sqlQueryTableCmd.CommandText = "select [Time],[value] from " + deviceName + " where [Time] < @fromTime limit @Count";
+
+                    sqlQueryTableCmd.Parameters.AddWithValue("@fromTime", fromTimeStamp);
+                    sqlQueryTableCmd.Parameters.AddWithValue("@Count", count);
+                    using (var dt = QueryDatabaseWithWithReader(deviceName, sqlQueryTableCmd))
+                    {
+                        if (dt.Rows.Count <= 0) return Content(System.Net.HttpStatusCode.NoContent, "");
+                        foreach (DataRow row in dt.Rows)
+                        {
+                            returnType.Add((string)row[0], (string)row[1]);
+                        }
+                    }
+                }
+                return Ok(returnType);
             }
             catch (Exception ex)
             {
@@ -197,7 +259,7 @@ namespace Controllers
             //Verify Table exists
             using (SQLiteCommand sqlCreateTableCmd = new SQLiteCommand(sqlConnection))
             {
-                sqlCreateTableCmd.CommandText = @"CREATE TABLE IF NOT EXISTS [" + tableName + "] ( [ID] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, [Time] TEXT NOT NULL, [Value] NVARCHAR(255), [Flags] INT)";
+                sqlCreateTableCmd.CommandText = @"CREATE TABLE IF NOT EXISTS [" + tableName + "] ( [ID] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, [Time] DATETIME NOT NULL, [Value] NVARCHAR(255), [Flags] INT)";
                 sqlCreateTableCmd.ExecuteNonQuery();
             }
         }
@@ -333,8 +395,6 @@ namespace Controllers
                 }
             }
         }
-
-
     }
 }
 

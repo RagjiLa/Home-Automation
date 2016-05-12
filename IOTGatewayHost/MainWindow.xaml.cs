@@ -36,20 +36,24 @@ namespace IOTGatewayHost
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            ((App)App.Current).ApiHost.Stop();
+            ((App)Application.Current).ApiHost.Stop();
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             Logger.Logged += Logger_Logged;
-            ((App)App.Current).ApiHost.Start();
+            ((App)Application.Current).ApiHost.Start();
         }
 
         private void Logger_Logged(object sender, LoggedArgs e)
         {
             lock (_syncLock)
             {
-                Application.Current.Dispatcher.Invoke(() => TxtLog.AppendText(e.Message), System.Windows.Threading.DispatcherPriority.Render);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    TxtLog.AppendText(e.Message);
+                    TxtScrollViewer.ScrollToEnd();
+                }, System.Windows.Threading.DispatcherPriority.Render);
             }
         }
 
@@ -99,6 +103,12 @@ namespace IOTGatewayHost
             {
                 _target = targetTabControl;
             }
+        }
+
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
+            e.Handled = true;
         }
     }
 }

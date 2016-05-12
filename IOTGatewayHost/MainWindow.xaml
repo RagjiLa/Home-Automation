@@ -77,7 +77,12 @@
 
         <StackPanel Grid.Row="0" Margin="5" Orientation="Horizontal"  HorizontalAlignment="Left" VerticalAlignment="Center">
             <Path Width="38" Height="20" Margin="5" Stretch="Fill" StrokeThickness="1" StrokeLineJoin="Round" Stroke="{StaticResource AccentColorBrush}" Fill="{StaticResource ForegroundColorBrush}" Data="F1 M 49.0833,33.25C 53.4555,33.25 57,36.7944 57,41.1666C 57,45.5389 53.3723,48.9999 49,49L 23,49.0001C 20.8139,49 19,47.3111 19,45.125C 19,43.1866 20.3931,41.5737 22.2327,41.233C 22.1892,40.9533 22.1667,40.6667 22.1667,40.3749C 22.1667,37.3993 24.5122,34.9712 27.4553,34.8389C 28.7579,31.1462 32.2782,28.4999 36.4167,28.4999C 40.3458,28.4999 43.7179,30.8853 45.1637,34.2868C 46.3193,33.627 47.6573,33.25 49.0833,33.25 Z "/>
-            <TextBlock  FontSize="20" Margin="5" HorizontalAlignment="Left" VerticalAlignment="Center" >IOT Dashboard</TextBlock>
+            <TextBlock  FontSize="20" Margin="5" HorizontalAlignment="Left" VerticalAlignment="Center" >IOT Gateway</TextBlock>
+            <TextBlock VerticalAlignment="Center">           
+                <Hyperlink x:Name="NavHyperLink" NavigateUri="http://www.google.com" RequestNavigate="Hyperlink_RequestNavigate">
+                    Server
+                </Hyperlink>
+            </TextBlock>
         </StackPanel>
 
         <ItemsControl Grid.Row="1" x:Name="MainContainerHeaders">
@@ -117,7 +122,7 @@
                                 </LinearGradientBrush>
                             </GridSplitter.Background>
                         </GridSplitter>
-                        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                        <ScrollViewer x:Name="TxtScrollViewer"  Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                             <TextBox Style="{StaticResource Triggers}"  Foreground="{StaticResource ForegroundColorBrush}" x:Name="TxtLog" IsReadOnly="True" Background="Transparent" BorderBrush="Transparent" AcceptsReturn="True" AcceptsTab="True"/>
                         </ScrollViewer>
                     </Grid>

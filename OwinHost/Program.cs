@@ -38,9 +38,9 @@ namespace OwinHost
 
             using (var target = new TimeSeriesTests(baseAddress))
             {
-                //target.PostMany();
+                target.PostMany("Laukik", 500);
 
-                target.GetSingle();
+                //target.GetSingle();
 
                 //target.DeleteSingle();
 
@@ -72,7 +72,7 @@ namespace OwinHost
         }
     }
 
- 
+
 
     public class TimeSeriesTests : HttpClient
     {
@@ -81,16 +81,17 @@ namespace OwinHost
             base.BaseAddress = new Uri(baseUrl);
         }
 
-        public void PostMany()
+        public void PostMany(string deviceName, int count)
         {
             var data = new Dictionary<string, string>();
-            data.Add(DateTime.MinValue.ToBinary().ToString(), DateTime.MinValue.ToLongDateString());
-            data.Add(DateTime.MaxValue.ToBinary().ToString(), DateTime.MaxValue.ToLongDateString());
+            for (int dataCtr = 0; dataCtr < count; dataCtr++)
+                data.Add(DateTime.Now.AddSeconds(dataCtr).ToUniversalTime().ToString("r"), dataCtr.ToString());
+
             var jsonDatatoPost = new JavaScriptSerializer().Serialize(data);
             StringContent content = new StringContent(jsonDatatoPost, Encoding.UTF8, "application/json");
             DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var result = PostAsync("TimeSeries/Laukik", content).Result;
-            if (result.StatusCode != System.Net.HttpStatusCode.OK) throw new Exception("Failed");
+            var result = PostAsync("TimeSeries/" + deviceName, content).Result;
+            if (result.StatusCode != HttpStatusCode.OK) throw new Exception("Failed");
         }
 
         public void PostSingle()

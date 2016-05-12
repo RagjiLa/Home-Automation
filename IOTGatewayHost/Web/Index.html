@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+    <link rel="stylesheet" type="text/css" media="all" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/themes/smoothness/jquery-ui.css"
+    />
+    <script src="https://code.jquery.com/jquery-2.2.3.min.js" integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="
+    crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js" integrity="sha256-xNjb53/rY+WmG+4L6tTl9m6PpqknWZvRt0rO1SRnJzw="
+    crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/canvasjs/1.7.0/canvasjs.min.js"></script>
+    <script type="text/javascript" src="Scripts/ChartData.js"></script>
+    <title>Home Automation</title>
+</head>
+
+<body class="w3-container">
+    <div class="w3-card-8 w3-section">
+        <header class="w3-container w3-teal">
+            <h1>Header</h1>
+        </header>
+
+        <div class="w3-container" style="height: 300px;width:98%" id="chartContainer">
+
+        </div>
+
+        <footer class="w3-container w3-teal w3-center" style="padding:10px;vertical-align: middle;">
+            <div class="w3-row">
+                <div class="w3-col m3 w3-center">
+                    <button class="w3-btn w3-teal w3-round-xxlarge" style="font-size: 100%;font-weight: bold"><<</button>
+                </div>
+                <div class="w3-col m6 w3-center">
+                    <div class="w3-half">
+                        <input id="from" class="w3-input" type="text" placeholder="from: current value">
+                    </div>
+                    <div class="w3-half">
+                        <input id="to" class="w3-input" type="text" placeholder="to: current value">
+                    </div>
+                </div>
+                <div class="w3-col m3 w3-center">
+                    <button class="w3-btn w3-teal w3-round-xxlarge" style="font-size: 100%;font-weight: bold">>></button>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>

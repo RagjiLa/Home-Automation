@@ -11,6 +11,9 @@ using Owin;
 using System.Reflection;
 using System.IO;
 using Microsoft.Owin.Hosting;
+using Microsoft.Owin;
+using Microsoft.Owin.FileSystems;
+using Microsoft.Owin.StaticFiles;
 
 namespace IOTGatewayHost.Business_Logic
 {
@@ -63,6 +66,18 @@ namespace IOTGatewayHost.Business_Logic
                 appBuilder.UseWebApi(config);
                 config.DependencyResolver = new DependencyResolver(BaseUrl);
                 config.MessageHandlers.Add(new RequestLogger());
+                
+                var filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Web/");
+                var fileServerOptions = new FileServerOptions()
+                {
+                    EnableDefaultFiles = true,
+                    EnableDirectoryBrowsing = false,
+                    RequestPath = new PathString(string.Empty),
+                    FileSystem = new PhysicalFileSystem(filePath)
+                };
+                fileServerOptions.StaticFileOptions.ServeUnknownFileTypes = true;
+                appBuilder.UseFileServer(fileServerOptions);
+
                 config.EnsureInitialized();
                 Logger.Log("Accepted routes:");
                 foreach (var s in config.Services.GetApiExplorer().ApiDescriptions)
