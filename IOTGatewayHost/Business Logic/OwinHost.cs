@@ -20,7 +20,8 @@ namespace IOTGatewayHost.Business_Logic
     public class OwinHost : IDisposable
     {
         private IDisposable _owinObject = null;
-        public void Start()
+
+        public string Start()
         {
             string baseAddress = "http://" + GetLocalIpAddress() + ":9000/";
             AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\Controllers.dll"));
@@ -28,6 +29,7 @@ namespace IOTGatewayHost.Business_Logic
             Startup.BaseUrl = baseAddress;
             _owinObject = WebApp.Start<Startup>(baseAddress);
             Logger.Log("Server Active @ " + baseAddress);
+            return baseAddress;
         }
 
         public void Stop()
@@ -66,7 +68,7 @@ namespace IOTGatewayHost.Business_Logic
                 appBuilder.UseWebApi(config);
                 config.DependencyResolver = new DependencyResolver(BaseUrl);
                 config.MessageHandlers.Add(new RequestLogger());
-                
+
                 var filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Web/");
                 var fileServerOptions = new FileServerOptions()
                 {

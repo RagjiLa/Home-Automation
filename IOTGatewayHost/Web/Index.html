@@ -6,19 +6,18 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
-    <link rel="stylesheet" type="text/css" media="all" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/themes/smoothness/jquery-ui.css"
-    />
+    <link rel="stylesheet" type="text/css" media="all" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/themes/smoothness/jquery-ui.css" />
     <script src="https://code.jquery.com/jquery-2.2.3.min.js" integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="
-    crossorigin="anonymous"></script>
+            crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js" integrity="sha256-xNjb53/rY+WmG+4L6tTl9m6PpqknWZvRt0rO1SRnJzw="
-    crossorigin="anonymous"></script>
+            crossorigin="anonymous"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/canvasjs/1.7.0/canvasjs.min.js"></script>
     <script type="text/javascript" src="Scripts/ChartData.js"></script>
     <title>Home Automation</title>
 </head>
 
 <body class="w3-container">
-    <div class="w3-card-8 w3-section">
+    <div id="content" class="w3-card-8 w3-section">
         <header class="w3-container w3-teal">
             <h1>Header</h1>
         </header>
@@ -27,24 +26,31 @@
 
         </div>
 
-        <footer class="w3-container w3-teal w3-center" style="padding:10px;vertical-align: middle;">
+        <footer class="w3-container w3-teal w3-center" style="padding:10px">
+
             <div class="w3-row">
-                <div class="w3-col m3 w3-center">
-                    <button class="w3-btn w3-teal w3-round-xxlarge" style="font-size: 100%;font-weight: bold"><<</button>
+                <div class="w3-col" style="width:25%">
+                    &nbsp;
                 </div>
-                <div class="w3-col m6 w3-center">
-                    <div class="w3-half">
-                        <input id="from" class="w3-input" type="text" placeholder="from: current value">
-                    </div>
-                    <div class="w3-half">
-                        <input id="to" class="w3-input" type="text" placeholder="to: current value">
-                    </div>
+                <div class="w3-col" style="width:25%">
+                    <input id="from" class="w3-input" type="text" placeholder="from: current value">
                 </div>
-                <div class="w3-col m3 w3-center">
-                    <button class="w3-btn w3-teal w3-round-xxlarge" style="font-size: 100%;font-weight: bold">>></button>
+                <div class="w3-col" style="width:25%">
+                    <input id="to" class="w3-input" type="text" placeholder="to: current value">
+                </div>
+                <div class="w3-col" style="width:25%">
+                    &nbsp;
                 </div>
             </div>
+
         </footer>
+    </div>
+
+    <div id="loadSpinner" class="w3-modal w3-center">
+        <span class="w3-modal-content w3-tag w3-xxlarge w3-padding w3-round-large w3-red w3-center">
+            Keep Calm<br>
+            Its loading<br>
+        </span>
     </div>
 </body>
 

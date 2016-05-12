@@ -42,7 +42,7 @@ namespace IOTGatewayHost
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             Logger.Logged += Logger_Logged;
-            ((App)Application.Current).ApiHost.Start();
+            NavHyperLink.NavigateUri =new Uri (((App)Application.Current).ApiHost.Start());
         }
 
         private void Logger_Logged(object sender, LoggedArgs e)

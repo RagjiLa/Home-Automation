@@ -38,7 +38,7 @@ namespace OwinHost
 
             using (var target = new TimeSeriesTests(baseAddress))
             {
-                target.PostMany("Laukik", 500);
+                target.PostMany("Laukik", 100);
 
                 //target.GetSingle();
 
@@ -85,7 +85,7 @@ namespace OwinHost
         {
             var data = new Dictionary<string, string>();
             for (int dataCtr = 0; dataCtr < count; dataCtr++)
-                data.Add(DateTime.Now.AddSeconds(dataCtr).ToUniversalTime().ToString("r"), dataCtr.ToString());
+                data.Add(DateTime.Now.AddDays(dataCtr).ToUniversalTime().ToString("O"), dataCtr.ToString());
 
             var jsonDatatoPost = new JavaScriptSerializer().Serialize(data);
             StringContent content = new StringContent(jsonDatatoPost, Encoding.UTF8, "application/json");

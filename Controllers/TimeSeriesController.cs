@@ -189,15 +189,15 @@ namespace Controllers
                 var returnType = new Dictionary<string, string>();
                 using (var sqlQueryTableCmd = new SQLiteCommand())
                 {
-                    sqlQueryTableCmd.CommandText = "select [Time],[value] from " + deviceName + " where [Time] between @fromTime and @toTime";
-                    sqlQueryTableCmd.Parameters.AddWithValue("@fromTime", "strftime('%d-%m-%Y %H:%M:%S','" + fromTimeStamp + "')");
-                    sqlQueryTableCmd.Parameters.AddWithValue("@toTime", "strftime('%d-%m-%Y %H:%M:%S','" + toTimeStamp + "')");
+                    sqlQueryTableCmd.CommandText = "select [Time],[value] from " + deviceName + " where datetime([Time]) between datetime(@fromTime) and datetime(@toTime)";
+                    sqlQueryTableCmd.Parameters.AddWithValue("@fromTime", fromTimeStamp);
+                    sqlQueryTableCmd.Parameters.AddWithValue("@toTime", toTimeStamp);
                     using (var dt = QueryDatabaseWithWithReader(deviceName, sqlQueryTableCmd))
                     {
                         if (dt.Rows.Count <= 0) return Content(System.Net.HttpStatusCode.NoContent, "");
                         foreach (DataRow row in dt.Rows)
                         {
-                            returnType.Add((string)row[0], (string)row[1]);
+                            returnType.Add(((DateTime)row[0]).ToUniversalTime().ToString("O"), (string)row[1]);
                         }
                     }
                 }
@@ -219,9 +219,9 @@ namespace Controllers
                 using (var sqlQueryTableCmd = new SQLiteCommand())
                 {
                     if (count > 0)
-                        sqlQueryTableCmd.CommandText = "select [Time],[value] from " + deviceName + " where [Time] > @fromTime limit @Count";
+                        sqlQueryTableCmd.CommandText = "select [Time],[value] from " + deviceName + " where  datetime([Time]) > datetime(@fromTime) limit @Count";
                     else
-                        sqlQueryTableCmd.CommandText = "select [Time],[value] from " + deviceName + " where [Time] < @fromTime limit @Count";
+                        sqlQueryTableCmd.CommandText = "select [Time],[value] from " + deviceName + " where  datetime([Time]) < datetime(@fromTime) limit @Count";
 
                     sqlQueryTableCmd.Parameters.AddWithValue("@fromTime", fromTimeStamp);
                     sqlQueryTableCmd.Parameters.AddWithValue("@Count", count);
@@ -230,7 +230,7 @@ namespace Controllers
                         if (dt.Rows.Count <= 0) return Content(System.Net.HttpStatusCode.NoContent, "");
                         foreach (DataRow row in dt.Rows)
                         {
-                            returnType.Add((string)row[0], (string)row[1]);
+                            returnType.Add(((DateTime)row[0]).ToUniversalTime().ToString("O"), (string)row[1]);
                         }
                     }
                 }
